@@ -3,7 +3,61 @@ import java.util.*;
 
 class Game{
 public static void main(String[] args){
-   System.out.print("hello world");
+//Plan out this next
+   //1. Set up Board, Rooms, Players
+   //2. while not end of game:
+      //while Player's turn
+         //check which options are available (move, act, rehearse, upgrade, end turn, display info/score
+         //(A)list options
+         //take input
+         //make sure input is valid
+            //if move:
+               //check which moves are available
+               //display available moves with option to go back to (A)
+               //take input
+               //check input
+                  //if input is invalid, ask again
+               //move player
+            //if upgrade:
+               //list upgrades and their costs, give option to return to (A)
+               //take input 
+               //check input
+                  //if input is invalid, ask again
+               //upgrade player
+            //if act:
+               //if player has a role:
+                  //wait for player input to roll dice
+                  //roll dice and determine success/failure
+                  //if success:
+                     //pay player
+                     //tell player that they won and display earnings
+                     //if scene is finished:
+                        //remove rehearse tokens from all players on the scene
+                        //if there are leading actors:
+                           //tell player scene is over and that it is time for bonus roll
+                           //wait on player input to roll dice
+                           //roll dice and distribute winnings
+                           //tell players what they won
+                        //else tell the player that the scene is over
+                  //if fail:
+                     //tell player that they fail
+               //if player does not have a role:
+                  //(B)find and list available roles
+                  //take input
+                  //if input is valid:
+                     //player gets role
+                  //else return to (B)
+            //if rehearse:
+               //add a token to the player
+            //if display info:
+               //list each player's money, rank, credits, etc.
+               //list info about the board
+            //if end turn
+               //go to next player's turn
+         //check for end of day
+            //if end of day, execute end of day operations and move to next player
+      //then go to next player
+   //3. Display end of game information 
 }
 int TotalPlayers;
 int SceneCardTotal;
@@ -39,13 +93,14 @@ LinkedList<Player> PlayerList = new LinkedList<Player>();
 }
 
 class Player{
-int rank = 1;
-int tokens = 0;
-String role;
-int PlayerNum;
-int position;
-int money = 0;
-int credits = 0;
+static int rank = 1;
+static int tokens = 0;
+static String role;
+//id of player
+static int PlayerNum;
+static int position;
+static int money = 0;
+static int credits = 0;
 boolean LeadingRole;
    private static void Move(int position){
    }
@@ -63,7 +118,7 @@ boolean LeadingRole;
             //send message that this is not a valid option
          }
          //RANK TWO
-         if(desired_rank = 2){
+         if(desired_rank == 2){
             if(money_or_credits == 0){
                if(money >= 4){
                   money = money - 4;
@@ -84,7 +139,7 @@ boolean LeadingRole;
             }
          }
          //RANK THREE
-         if(desired_rank = 3){
+         if(desired_rank == 3){
             if(money_or_credits == 0){
                if(money >= 10){
                   money = money - 10;
@@ -105,7 +160,7 @@ boolean LeadingRole;
             }
          }
          //RANK FOUR
-         if(desired_rank = 4){
+         if(desired_rank == 4){
             if(money_or_credits == 0){
                if(money >= 18){
                   money = money - 18;
@@ -126,7 +181,7 @@ boolean LeadingRole;
             }
          }
          //RANK FIVE
-         if(desired_rank = 5){
+         if(desired_rank == 5){
             if(money_or_credits == 0){
                if(money >= 28){
                   money = money - 28;
@@ -147,7 +202,7 @@ boolean LeadingRole;
             }
          }
          //RANK SIX
-         if(desired_rank = 6){
+         if(desired_rank == 6){
             if(money_or_credits == 0){
                if(money >= 40){
                   money = money - 40;
@@ -169,16 +224,16 @@ boolean LeadingRole;
          }
    }
    
-   private static void BonusRoll(int num_dice, int players[]){
-      winnings = new int [num_dice];
+   private static int [] BonusRoll(int num_dice, int players[]){
+      int [] winnings = new int [num_dice];
       Dice dice = new Dice();
-      //store each roll
+      //store each roll(rolls one at a time)
       for(int i  = 0; i < num_dice; i++){
-         winnings[i] = dice.RollDice(1);
+         winnings[i] = dice.RollDice();
       }
       //distribute among players
       Arrays.sort(winnings);
-      ///figure out how to give winnings to players in order by rank
+      return winnings;
    }
    private static void ClaimRole(){
    }
@@ -190,22 +245,11 @@ boolean LeadingRole;
    private static void AddCredits(int payout){
       credits =+ payout;
    }
-   //private static void AddToken(){
-     // tokens++;
-   //}
 }
 class Dice{
-int NumOfDice;
-static int SumOfDice;
-   public static void RollDice(){
-	   for(int i = 0; i < NumOfDice; i++){
-		   int roll = (int)(Math.random() * 6 + 1);
-		   SumOfDice += roll;
-	   }
-      System.out.println(SumOfDice);
-   }
-   private static int GiveSum(int SumOfDice){
-	   return(SumOfDice);
+   public static int RollDice(){
+      int roll = (int)(Math.random() * 6 + 1);
+      return roll;
    }
 }
 
