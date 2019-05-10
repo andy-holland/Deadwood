@@ -111,7 +111,11 @@ private Document docB;
    public void readBoard(Document docB){
       Element root = docB.getDocumentElement();
       NodeList board = root.getElementsByTagName("set");
+      NodeList trailer = root.getElementsByTagName("trailer");
+      NodeList Office = root.getElementsByTagName("office");
       String neighborList[] = new String[4];
+      String TrailerNeighbors[] = new String[4];
+      String OfficeNeighbors[] = new String[4];
       for(int t =0; t < board.getLength(); t++){
          Node set = board.item(t);
          String setName = set.getAttributes().getNamedItem("name").getNodeValue();
@@ -152,13 +156,32 @@ private Document docB;
                   String partName = part.getAttributes().getNamedItem("name").getNodeValue();
                   int partLevel = Integer.parseInt(part.getAttributes().getNamedItem("level").getNodeValue());
                   NodeList partContents = part.getChildNodes();
-                  String partName = part.getAttributes().getNameditem("name").getNodeValue();
-                  //left off here rename the vars and the node
-                  int takex = Integer.parseInt(takeAreaAtt.getAttributes().getNamedItem("x").getNodeValue());               
-                  int takey = Integer.parseInt(takeAreaAtt.getAttributes().getNamedItem("y").getNodeValue());
-                  int takeh = Integer.parseInt(takeAreaAtt.getAttributes().getNamedItem("h").getNodeValue());
-                  int takew = Integer.parseInt(takeAreaAtt.getAttributes().getNamedItem("w").getNodeValue());
+                  int partx = Integer.parseInt(partContents.item(0).getAttributes().getNamedItem("x").getNodeValue());               
+                  int party = Integer.parseInt(partContents.item(0).getAttributes().getNamedItem("y").getNodeValue());
+                  int parth = Integer.parseInt(partContents.item(0).getAttributes().getNamedItem("h").getNodeValue());
+                  int partw = Integer.parseInt(partContents.item(0).getAttributes().getNamedItem("w").getNodeValue());
+                  String quote = partContents.item(1).getTextContent(); 
                }
+            }
+         }
+      }
+      for(int t = 0; t < trailer.getLength();t++){
+         Node trailer_n = trailer.item(t);
+         NodeList trailer_neighbors = trailer_n.getChildNodes();
+         for(int u = 0; u < trailer_neighbors.getLength(); u ++){
+               Node t_neighbor = trailer_neighbors.item(u);
+               String t_neighborName = t_neighbor.getAttributes().getNamedItem("name").getNodeValue();
+               TrailerNeighbors[u] = t_neighborName;
+         }
+      }
+      for(int t = 0; t < Office.getLength();t++){
+      Node OfficeData = Office.item(t);
+         if("neighbors".equals(OfficeData.getNodeName())){
+            NodeList O_neighbors = OfficeData.getChildNodes();
+            for(int u = 0; u < O_neighbors.getLength(); u ++){
+               Node O_neighbor = O_neighbors.item(u);
+               String O_neighborName = O_neighbor.getAttributes().getNamedItem("name").getNodeValue();
+               OfficeNeighbors[u] = O_neighborName;
             }
          }
       }
