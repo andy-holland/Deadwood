@@ -3,8 +3,20 @@ import java.util.*;
 
 class Game{
 public static void main(String[] args){
-//Plan out this next
+   Scanner read = new Scanner(System.in);
+   System.out.println("Welcome to Deadwood!\n");
+   System.out.println("How many players are there? You can have 2-8\n");
+   int TotalPlayers = read.nextInt();
+   while(TotalPlayers < 2 || TotalPlayers > 8){   
+      System.out.println("That is not a valid amount of players\n");
+      System.out.println("How many players are there? You can have 2-8\n");
+      TotalPlayers = read.nextInt();
+   }
+   System.out.println("Starting the game with "+TotalPlayers+" players\n");
+   System.out.println("Press enter to start the game\n");
+   read.nextLine();
    //1. Set up Board, Rooms, Players
+
    //2. while not end of game:
       //while Player's turn
          //check which options are available (move, act, rehearse, upgrade, end turn, display info/score
@@ -58,18 +70,19 @@ public static void main(String[] args){
             //if end of day, execute end of day operations and move to next player
       //then go to next player
    //3. Display end of game information 
+   //close scanner
+   read.close();
 }
 int TotalPlayers;
 int SceneCardTotal;
 int DaysLeft;
-LinkedList<Player> PlayerList = new LinkedList<Player>();
    private static void SetupBoard(){
    }
    private static void SetupCards(int IdNum, String SceneName, int NumOfRoles, int Budget){
    }
    private static Player SetupPlayers(int Playernum, int TotalPlayers){
-   Player Player1 = new Player();
-   return Player1;
+      Player Player1 = new Player();
+      return Player1;
    }
    private static boolean CheckRank(int PlayerRank){
    return true;
@@ -236,8 +249,6 @@ boolean LeadingRole;
       return winnings;
    }
    private static void ClaimRole(){
-   }
-   private static void EndTurn(){
    }
    private static void AddMoney(int payout){
       money += payout;
