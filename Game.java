@@ -3,10 +3,14 @@ import java.util.*;
 
 class Game{
 public static void main(String[] args){
+   int SceneCardTotal;
+   int DaysLeft = 4;
+   int TotalPlayers;
+   boolean EndTurn = false;
    Scanner read = new Scanner(System.in);
    System.out.println("Welcome to Deadwood!\n");
    System.out.println("How many players are there? You can have 2-8\n");
-   int TotalPlayers = read.nextInt();
+   TotalPlayers = read.nextInt();
    while(TotalPlayers < 2 || TotalPlayers > 8){   
       System.out.println("That is not a valid amount of players\n");
       System.out.println("How many players are there? You can have 2-8\n");
@@ -16,74 +20,37 @@ public static void main(String[] args){
    System.out.println("Press enter to start the game\n");
    read.nextLine();
    //1. Set up Board, Rooms, Players
-
+   //players
+   Player player1 = new Player();
+   Player player2 = new Player();
+   Player player3 = new Player();
+   Player player4 = new Player();
+   Player player5 = new Player();
+   Player player6 = new Player();
+   Player player7 = new Player();
+   Player player8 = new Player();
    //2. while not end of game:
-      //while Player's turn
+   while(DaysLeft > 0){
          //check which options are available (move, act, rehearse, upgrade, end turn, display info/score
          //(A)list options
          //take input
          //make sure input is valid
-            //if move:
-               //check which moves are available
-               //display available moves with option to go back to (A)
-               //take input
-               //check input
-                  //if input is invalid, ask again
-               //move player
-            //if upgrade:
-               //list upgrades and their costs, give option to return to (A)
-               //take input 
-               //check input
-                  //if input is invalid, ask again
-               //upgrade player
-            //if act:
-               //if player has a role:
-                  //wait for player input to roll dice
-                  //roll dice and determine success/failure
-                  //if success:
-                     //pay player
-                     //tell player that they won and display earnings
-                     //if scene is finished:
-                        //remove rehearse tokens from all players on the scene
-                        //if there are leading actors:
-                           //tell player scene is over and that it is time for bonus roll
-                           //wait on player input to roll dice
-                           //roll dice and distribute winnings
-                           //tell players what they won
-                        //else tell the player that the scene is over
-                  //if fail:
-                     //tell player that they fail
-               //if player does not have a role:
-                  //(B)find and list available roles
-                  //take input
-                  //if input is valid:
-                     //player gets role
-                  //else return to (B)
-            //if rehearse:
-               //add a token to the player
-            //if display info:
-               //list each player's money, rank, credits, etc.
-               //list info about the board
-            //if end turn
-               //go to next player's turn
+
          //check for end of day
             //if end of day, execute end of day operations and move to next player
       //then go to next player
-   //3. Display end of game information 
+   }//<- end of daysleft while loop
    //close scanner
    read.close();
 }
-int TotalPlayers;
-int SceneCardTotal;
-int DaysLeft;
    private static void SetupBoard(){
    }
    private static void SetupCards(int IdNum, String SceneName, int NumOfRoles, int Budget){
    }
-   private static Player SetupPlayers(int Playernum, int TotalPlayers){
-      Player Player1 = new Player();
-      return Player1;
-   }
+   //private static Player SetupPlayers(){
+      //Player player = new Player();
+      //return player;
+   //}
    private static boolean CheckRank(int PlayerRank){
    return true;
    }
@@ -106,18 +73,100 @@ int DaysLeft;
 }
 
 class Player{
-static int rank = 1;
+static int instance;
+int rank = 1;
 static int tokens = 0;
-static String role;
+String role;
 //id of player
-static int PlayerNum;
-static int position;
+int PlayerNum;
+int position;
 static int money = 0;
 static int credits = 0;
 boolean LeadingRole;
+   //constructor
+   public Player(){
+      instance += 1;
+      PlayerNum = instance;
+   }
+   //method to run current player's turn
+   public void PlayerTurn(){
+      //open scanner 
+      Scanner read = new Scanner(System.in);
+      String input;
+      System.out.println("Player"+PlayerNum+"'s turn. Your options are:\n");
+      //list available options
+      if(canMove() == true){
+         System.out.println(" move ");
+      }
+      if(canAct() == true){
+         System.out.println(" act ");
+      }
+      if(canUpgrade() == true){
+         System.out.println(" upgrade ");
+      }
+      if(canRehearse() == true){
+         System.out.println(" rehearse ");
+      }
+      System.out.println(" exit\n");
+      //take input
+      input = read.nextLine();
+      while(input != "move" && input != "act" && input != "upgrade" && input != "rehearse" && input != "exit"){
+         System.out.println("That is not acceptable input. Try again.");
+         input = read.nextLine();
+      }
+      //close scanner
+      read.close();
+   }
+   //these just return true for now but we will change that
+   static boolean canMove(){
+      return true;
+   }
+   private static boolean canAct(){
+      return true;
+   }
+   private static boolean canUpgrade(){
+      return true;
+   }
+   private static boolean canRehearse(){
+      return true;
+   }
+   private static void GetInfo(){
+               //list each player's money, rank, credits, etc.
+               //list info about the board
+   }
    private static void Move(int position){
+               //if move:
+               //check which moves are available
+               //display available moves with option to go back to (A)
+               //take input
+               //check input
+                  //if input is invalid, ask again
+               //move player
    }
    private static void Act(int tokens){
+               //if act:
+               //if player has a role:
+                  //wait for player input to roll dice
+                  //roll dice and determine success/failure
+                  //if success:
+                     //pay player
+                     //tell player that they won and display earnings
+                     //if scene is finished:
+                        //remove rehearse tokens from all players on the scene
+                        //if there are leading actors:
+                           //tell player scene is over and that it is time for bonus roll
+                           //wait on player input to roll dice
+                           //roll dice and distribute winnings
+                           //tell players what they won
+                        //else tell the player that the scene is over
+                  //if fail:
+                     //tell player that they fail
+               //if player does not have a role:
+                  //(B)find and list available roles
+                  //take input
+                  //if input is valid:
+                     //player gets role
+                  //else return to (B)
    }
    private static void Rehearse(){
       tokens++;
