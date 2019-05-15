@@ -280,9 +280,13 @@ private Document docB;
       String neighborList[] = new String[4];
       String TrailerNeighbors[] = new String[4];
       String OfficeNeighbors[] = new String[4];
+      set[] SetList = new set[12];
       for(int t =0; t < board.getLength(); t++){
          Node set = board.item(t);
+         //get the set name and update
          String setName = set.getAttributes().getNamedItem("name").getNodeValue();
+         set Set = new set();
+         Set.UpdateName(setName);
          NodeList inside = set.getChildNodes();
          for(int q = 0; q < inside.getLength(); q++){
             Node setData = inside.item(q);
@@ -291,7 +295,7 @@ private Document docB;
                for(int u = 0; u < neighbors.getLength(); u ++){
                   Node neighbor = neighbors.item(u);
                   String neighborName = neighbor.getAttributes().getNamedItem("name").getNodeValue();
-                  neighborList[u] = neighborName;
+                  Set.AddNeighbor(neighborName);
                }
             }
             else if("area".equals(setData.getNodeName())){
@@ -299,6 +303,7 @@ private Document docB;
                int y = Integer.parseInt(setData.getAttributes().getNamedItem("y").getNodeValue());
                int h = Integer.parseInt(setData.getAttributes().getNamedItem("h").getNodeValue());
                int w = Integer.parseInt(setData.getAttributes().getNamedItem("w").getNodeValue());
+               Set.UpdateArea(x,y,h,w);
             }
             else if("takes".equals(setData.getNodeName())){
                NodeList takeList = setData.getChildNodes();
@@ -311,6 +316,7 @@ private Document docB;
                   int takey = Integer.parseInt(takeAreaAtt.getAttributes().getNamedItem("y").getNodeValue());
                   int takeh = Integer.parseInt(takeAreaAtt.getAttributes().getNamedItem("h").getNodeValue());
                   int takew = Integer.parseInt(takeAreaAtt.getAttributes().getNamedItem("w").getNodeValue());
+                  Set.ShotsArea(takex, takey, takeh, takew);
                }
             }
             else if("parts".equals(setData.getNodeName())){
@@ -318,17 +324,26 @@ private Document docB;
                for(int u = 0; u < parts.getLength(); u++){
                   Node part = parts.item(u);
                   String partName = part.getAttributes().getNamedItem("name").getNodeValue();
+                  part SetPart = new part();
+                  SetPart.UpdateName(partName);
                   int partLevel = Integer.parseInt(part.getAttributes().getNamedItem("level").getNodeValue());
+                  SetPart.UpdateLevel(partLevel);
                   NodeList partContents = part.getChildNodes();
                   int partx = Integer.parseInt(partContents.item(0).getAttributes().getNamedItem("x").getNodeValue());               
                   int party = Integer.parseInt(partContents.item(0).getAttributes().getNamedItem("y").getNodeValue());
                   int parth = Integer.parseInt(partContents.item(0).getAttributes().getNamedItem("h").getNodeValue());
                   int partw = Integer.parseInt(partContents.item(0).getAttributes().getNamedItem("w").getNodeValue());
-                  String quote = partContents.item(1).getTextContent(); 
+                  SetPart.UpdateCord(partx, party, parth, partw);
+                  String quote = partContents.item(1).getTextContent();
+                  SetPart.UpdateLine(quote);
+                  Set.AddPart(SetPart); 
                }
             }
+         SetList[q] = Set;
          }
       }
+      set setTrailer = new set();
+      setTrailer.UpdateName("trailer");
       Node trailer_n = trailer.item(0);
       NodeList trailer_items = trailer_n.getChildNodes();
       Node neighborLister = trailer_items.item(0);
@@ -337,12 +352,15 @@ private Document docB;
             Node t_neighbor = Neighbors_t.item(u);
             String t_neighborName = t_neighbor.getAttributes().getNamedItem("name").getNodeValue();
             TrailerNeighbors[u] = t_neighborName;
+            setTrailer.AddNeighbor(t_neighborName);
       }
       Node area_t = trailer_items.item(1);
       int trailerx = Integer.parseInt(area_t.getAttributes().getNamedItem("x").getNodeValue());               
       int trailery = Integer.parseInt(area_t.getAttributes().getNamedItem("y").getNodeValue());
       int trailerh = Integer.parseInt(area_t.getAttributes().getNamedItem("h").getNodeValue());
       int trailerw = Integer.parseInt(area_t.getAttributes().getNamedItem("w").getNodeValue());
+      setTrailer.UpdateArea(trailerx, trailery, trailerh, trailerw);
+      set setOffice = new set();
       Node OfficeN = Office.item(0);
       NodeList InsideOffice = OfficeN.getChildNodes();
       for(int t = 0; t < InsideOffice.getLength(); t++){
@@ -353,6 +371,7 @@ private Document docB;
                Node O_neighbor = O_neighbors.item(u);
                String O_neighborName = O_neighbor.getAttributes().getNamedItem("name").getNodeValue();
                OfficeNeighbors[u] = O_neighborName;
+               setOffice.UpdateName(O_neighborName);
             }
          }
          else if("area".equals(OfficeData.getNodeName())){
@@ -360,7 +379,9 @@ private Document docB;
             int officey = Integer.parseInt(area_t.getAttributes().getNamedItem("y").getNodeValue());
             int officeh = Integer.parseInt(area_t.getAttributes().getNamedItem("h").getNodeValue());
             int officew = Integer.parseInt(area_t.getAttributes().getNamedItem("w").getNodeValue());  
+            setOffice.UpdateArea(officex, officey, officeh, officew);
          }
+         /*
          else if("upgrades".equals(OfficeData.getNodeName())){
             NodeList upgrades = OfficeData.getChildNodes();
             for(int q = 0; q < upgrades.getLength();q++){
@@ -375,6 +396,7 @@ private Document docB;
                int upgradew = Integer.parseInt(upgradeArea.item(0).getAttributes().getNamedItem("w").getNodeValue());
             }
          }
+         */
       }
   }
 }
@@ -529,6 +551,45 @@ private int neighborIndex;
 private int[] setArea = new int[4];
 private part[] partList = new part[4];
 private int partIndex;
-//finish writing set class
-
+private int[][] shots = new int[3][4];
+private int shotIndex;
+public void UpdateName(String Name){
+   setName = Name;
+   }
+public void AddNeighbor(String neighbor){
+   neighbors[neighborIndex] = neighbor;
+   neighborIndex ++; 
+   }
+public void UpdateArea(int x, int y, int h, int w){
+   setArea[0] = x;
+   setArea[1] = y;
+   setArea[2] = h;
+   setArea[3] = w;
+   }
+public void AddPart(part NewPart){
+   partList[partIndex] = NewPart;
+   partIndex ++;
+   }
+public void ShotsArea(int x, int y, int h, int w){
+   shots[shotIndex][0] = x;
+   shots[shotIndex][1] = y;
+   shots[shotIndex][2] = h;
+   shots[shotIndex][3] = w;
+   shotIndex ++;
+   }
+public String returnName(){
+   return setName;
+   }
+public String[] returnNeighbors(){
+   return neighbors;
+   }
+public int[] returnArea(){
+   return setArea;
+   }
+public part[] returnParts(){
+   return partList;
+   }
+public int[] returnShotArea(){
+   return shots[shotIndex-1];
+   }
 }
