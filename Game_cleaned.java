@@ -12,6 +12,8 @@ class Game{
 public static void main(String[] args){
 //Plan out this next
    //1. Set up Board, Rooms, Players
+   SetupBoard();
+   SetupCards();
    //2. while not end of game:
       //while Player's turn
          //check which options are available (move, act, rehearse, upgrade, end turn, display info/score
@@ -69,10 +71,20 @@ public static void main(String[] args){
 int TotalPlayers;
 int SceneCardTotal;
 int DaysLeft;
+static Board DefaultBoard = new Board();
+static Scenes[] SceneDeck = new Scenes[40];
 LinkedList<Player> PlayerList = new LinkedList<Player>();
    private static void SetupBoard(){
+      DefaultBoard.getBoard();
+      set[] SetList = new set[12];
+      SetList = DefaultBoard.returnSetlist();
    }
-   private static void SetupCards(int IdNum, String SceneName, int NumOfRoles, int Budget){
+   private static void SetupCards(){
+      for(int t = 0; t < 40; t++){
+         Scenes Card = new Scenes();
+         Card.getCards(t);
+         SceneDeck[t] = Card;
+      }
    }
    private static Player SetupPlayers(int Playernum, int TotalPlayers){
    Player Player1 = new Player();
@@ -263,9 +275,14 @@ class Dice{
 class Board{
 private DocHandler boardDoc = new DocHandler();
 private Document docB;
+private set[] SetList = new set[12];
+   public set[] returnSetlist(){
+      return SetList;
+   }
    public void getBoard(){
       try{
          docB = boardDoc.getDoc("board.xml");
+         readBoard(docB);
       }
       catch(ParserConfigurationException ex){
          System.out.println("XML Parse Failure");
@@ -277,10 +294,8 @@ private Document docB;
       NodeList board = root.getElementsByTagName("set");
       NodeList trailer = root.getElementsByTagName("trailer");
       NodeList Office = root.getElementsByTagName("office");
-      String neighborList[] = new String[4];
       String TrailerNeighbors[] = new String[4];
       String OfficeNeighbors[] = new String[4];
-      set[] SetList = new set[12];
       for(int t =0; t < board.getLength(); t++){
          Node set = board.item(t);
          //get the set name and update
@@ -292,7 +307,7 @@ private Document docB;
             Node setData = inside.item(q);
             if("neighbors".equals(setData.getNodeName())){
                NodeList neighbors = setData.getChildNodes();
-               for(int u = 0; u < neighbors.getLength(); u ++){
+               for(int u = 1; u < neighbors.getLength(); u = u+2){
                   Node neighbor = neighbors.item(u);
                   String neighborName = neighbor.getAttributes().getNamedItem("name").getNodeValue();
                   Set.AddNeighbor(neighborName);
@@ -307,7 +322,7 @@ private Document docB;
             }
             else if("takes".equals(setData.getNodeName())){
                NodeList takeList = setData.getChildNodes();
-               for(int u = 0; u < takeList.getLength(); u++){
+               for(int u = 1; u < takeList.getLength(); u = u+2){
                   Node takes = takeList.item(u);
                   int takeNum = Integer.parseInt(takes.getAttributes().getNamedItem("number").getNodeValue());
                   NodeList takeArea = takes.getChildNodes();
@@ -321,7 +336,7 @@ private Document docB;
             }
             else if("parts".equals(setData.getNodeName())){
                NodeList parts = setData.getChildNodes();
-               for(int u = 0; u < parts.getLength(); u++){
+               for(int u = 1; u < parts.getLength(); u = u+2){
                   Node part = parts.item(u);
                   String partName = part.getAttributes().getNamedItem("name").getNodeValue();
                   part SetPart = new part();
@@ -329,56 +344,59 @@ private Document docB;
                   int partLevel = Integer.parseInt(part.getAttributes().getNamedItem("level").getNodeValue());
                   SetPart.UpdateLevel(partLevel);
                   NodeList partContents = part.getChildNodes();
-                  int partx = Integer.parseInt(partContents.item(0).getAttributes().getNamedItem("x").getNodeValue());               
-                  int party = Integer.parseInt(partContents.item(0).getAttributes().getNamedItem("y").getNodeValue());
-                  int parth = Integer.parseInt(partContents.item(0).getAttributes().getNamedItem("h").getNodeValue());
-                  int partw = Integer.parseInt(partContents.item(0).getAttributes().getNamedItem("w").getNodeValue());
+                  int partx = Integer.parseInt(partContents.item(1).getAttributes().getNamedItem("x").getNodeValue());               
+                  int party = Integer.parseInt(partContents.item(1).getAttributes().getNamedItem("y").getNodeValue());
+                  int parth = Integer.parseInt(partContents.item(1).getAttributes().getNamedItem("h").getNodeValue());
+                  int partw = Integer.parseInt(partContents.item(1).getAttributes().getNamedItem("w").getNodeValue());
                   SetPart.UpdateCord(partx, party, parth, partw);
-                  String quote = partContents.item(1).getTextContent();
+                  String quote = partContents.item(3).getTextContent();
                   SetPart.UpdateLine(quote);
                   Set.AddPart(SetPart); 
                }
             }
-         SetList[q] = Set;
+            else if("set".equals(setData.getNodeName())){
+               System.out.println("here");
+            }
          }
+      SetList[t] = Set;
       }
       set setTrailer = new set();
       setTrailer.UpdateName("trailer");
       Node trailer_n = trailer.item(0);
       NodeList trailer_items = trailer_n.getChildNodes();
-      Node neighborLister = trailer_items.item(0);
+      Node neighborLister = trailer_items.item(1);
       NodeList Neighbors_t = neighborLister.getChildNodes();
-      for(int u = 0; u < Neighbors_t.getLength(); u ++){
+      for(int u = 1; u < Neighbors_t.getLength(); u = u+2){
             Node t_neighbor = Neighbors_t.item(u);
             String t_neighborName = t_neighbor.getAttributes().getNamedItem("name").getNodeValue();
-            TrailerNeighbors[u] = t_neighborName;
             setTrailer.AddNeighbor(t_neighborName);
       }
-      Node area_t = trailer_items.item(1);
+      Node area_t = trailer_items.item(3);
       int trailerx = Integer.parseInt(area_t.getAttributes().getNamedItem("x").getNodeValue());               
       int trailery = Integer.parseInt(area_t.getAttributes().getNamedItem("y").getNodeValue());
       int trailerh = Integer.parseInt(area_t.getAttributes().getNamedItem("h").getNodeValue());
       int trailerw = Integer.parseInt(area_t.getAttributes().getNamedItem("w").getNodeValue());
       setTrailer.UpdateArea(trailerx, trailery, trailerh, trailerw);
+      SetList[10] = setTrailer;
       set setOffice = new set();
-      Node OfficeN = Office.item(0);
-      NodeList InsideOffice = OfficeN.getChildNodes();
-      for(int t = 0; t < InsideOffice.getLength(); t++){
-         Node OfficeData = Office.item(t);
+      setOffice.UpdateName("Office");
+      Node Officebuilder = Office.item(0);
+      NodeList OfficebuilderL = Officebuilder.getChildNodes();
+      for(int t = 0; t < OfficebuilderL.getLength(); t++){
+         Node OfficeData = OfficebuilderL.item(t);
          if("neighbors".equals(OfficeData.getNodeName())){
             NodeList O_neighbors = OfficeData.getChildNodes();
-            for(int u = 0; u < O_neighbors.getLength(); u ++){
+            for(int u = 1; u < O_neighbors.getLength(); u = u+2){
                Node O_neighbor = O_neighbors.item(u);
                String O_neighborName = O_neighbor.getAttributes().getNamedItem("name").getNodeValue();
-               OfficeNeighbors[u] = O_neighborName;
-               setOffice.UpdateName(O_neighborName);
+               setOffice.AddNeighbor(O_neighborName);
             }
          }
          else if("area".equals(OfficeData.getNodeName())){
-            int officex = Integer.parseInt(area_t.getAttributes().getNamedItem("x").getNodeValue());               
-            int officey = Integer.parseInt(area_t.getAttributes().getNamedItem("y").getNodeValue());
-            int officeh = Integer.parseInt(area_t.getAttributes().getNamedItem("h").getNodeValue());
-            int officew = Integer.parseInt(area_t.getAttributes().getNamedItem("w").getNodeValue());  
+            int officex = Integer.parseInt(OfficeData.getAttributes().getNamedItem("x").getNodeValue());               
+            int officey = Integer.parseInt(OfficeData.getAttributes().getNamedItem("y").getNodeValue());
+            int officeh = Integer.parseInt(OfficeData.getAttributes().getNamedItem("h").getNodeValue());
+            int officew = Integer.parseInt(OfficeData.getAttributes().getNamedItem("w").getNodeValue());  
             setOffice.UpdateArea(officex, officey, officeh, officew);
          }
          /*
@@ -398,6 +416,7 @@ private Document docB;
          }
          */
       }
+  SetList[11] = setOffice;
   }
 }
 
@@ -407,13 +426,16 @@ private Document doc;
 private NodeList deck;
 private String sceneName;
 private String imageNum;
-private String budget;
+private String SceneDesc;
+private int budget;
 private int sceneNum;
 private part[] partList = new part[3];
 private int partIndex = 0;
-   public void getCards(){
+//get card data from xml file
+   public void getCards(int cardNum){
       try{
          doc = cardsDoc.getDoc("cards.xml");
+         readCards(doc, cardNum);
          }
       catch(ParserConfigurationException ex){
          System.out.println("XML Parse Failure");
@@ -421,19 +443,22 @@ private int partIndex = 0;
          }
    }
    public void readCards(Document doc, int cardNum){
+   //store data into different scene objects
       Element root = doc.getDocumentElement();
       deck = root.getElementsByTagName("card");
-      for(int j = 0; j < deck.getLength(); j++){
-         Node card = deck.item(j);
+         Node card = deck.item(cardNum);
+         //get name of the card
          sceneName = card.getAttributes().getNamedItem("name").getNodeValue();
+         //get the image name/ number
          imageNum = card.getAttributes().getNamedItem("img").getNodeValue();
-         budget = card.getAttributes().getNamedItem("budget").getNodeValue();
+         //get the budget for the card
+         budget = Integer.parseInt(card.getAttributes().getNamedItem("budget").getNodeValue());
          NodeList children = card.getChildNodes();
-         for(int f = 0; f < children.getLength();f++){
+         for(int f = 1; f < children.getLength();f = f+2){
             Node grandchild = children.item(f);
             if("scene".equals(grandchild.getNodeName())){
                sceneNum = Integer.parseInt(grandchild.getAttributes().getNamedItem("number").getNodeValue());
-               String sceneDesc = grandchild.getTextContent();
+               SceneDesc = grandchild.getTextContent();
             }
             else if("part".equals(grandchild.getNodeName())){
                part addPart = new part();
@@ -465,9 +490,7 @@ private int partIndex = 0;
              partIndex ++;
              }
           }
-       }
-    }
-    
+   }
 }
 
 class DocHandler{
@@ -553,6 +576,7 @@ private part[] partList = new part[4];
 private int partIndex;
 private int[][] shots = new int[3][4];
 private int shotIndex;
+private Scenes SceneCard = new Scenes();
 public void UpdateName(String Name){
    setName = Name;
    }
@@ -577,6 +601,9 @@ public void ShotsArea(int x, int y, int h, int w){
    shots[shotIndex][3] = w;
    shotIndex ++;
    }
+public void UpdateCard(Scenes card){
+   SceneCard = card;
+}
 public String returnName(){
    return setName;
    }
