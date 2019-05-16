@@ -34,6 +34,7 @@ public static void main(String[] args){
    //players
    SetupBoard();
    SetupCards();
+   DistrCards();
    Player player1 = new Player();
    Player player2 = new Player();
    Player player3 = new Player();
@@ -58,7 +59,8 @@ public static void main(String[] args){
 }
    static Board DefaultBoard = new Board();
    static Scenes[] SceneDeck = new Scenes[40];
-   
+   static int[] UsedCards = new int[40];
+   static int UsedCardIndex = 0;
    private static void SetupBoard(){
       DefaultBoard.getBoard();
       set[] SetList = new set[12];
@@ -71,6 +73,30 @@ public static void main(String[] args){
          Card.getCards(t);
          SceneDeck[t] = Card;
          }
+   }
+   private static void DistrCards(){
+   set[] SetList = new set[12];
+   SetList = DefaultBoard.returnSetlist();
+      for (int t = 0; t < 10; t++){
+         boolean used = false;
+         int cardNum = (int)(Math.random() * 40 + 1);
+         if(UsedCardIndex != 0){
+            for(int y = 0; y < UsedCardIndex-1; y++){
+               if(UsedCards[y] == cardNum){
+                  used = true;
+               }
+            }
+            if (used == false){
+            UsedCards[UsedCardIndex] = cardNum;
+            UsedCardIndex ++; 
+            }
+         }
+         else{
+            UsedCards[UsedCardIndex] = cardNum;
+            UsedCardIndex ++;
+         }
+         SetList[t].UpdateCard(SceneDeck[cardNum]);
+      }
    }
    //private static Player SetupPlayers(){
       //Player player = new Player();
