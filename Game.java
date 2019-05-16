@@ -130,7 +130,7 @@ static int tokens = 0;
 String role;
 //id of player
 int PlayerNum;
-int position;
+private static set currentposition = new set();
 static int money = 0;
 static int credits = 0;
 boolean LeadingRole;
@@ -161,7 +161,7 @@ boolean LeadingRole;
       System.out.println(" exit\n");
       //take input
       input = read.nextLine();
-      while(input != "move" && input != "act" && input != "upgrade" && input != "rehearse" && input != "exit"){
+      while(read.equals("move") == false && read.equals("act") == false && read.equals("upgrade") == false && read.equals("rehearse") == false && read.equals("exit") == false){
          System.out.println("That is not acceptable input. Try again.");
          input = read.nextLine();
       }
@@ -185,14 +185,24 @@ boolean LeadingRole;
                //list each player's money, rank, credits, etc.
                //list info about the board
    }
-   private static void Move(int position){
+   private static String Move(int position){
+               Scanner read = new Scanner(System.in);
                //if move:
                //check which moves are available
+               String currentpos = currentposition.returnName();
+               String[] neighbors = currentposition.returnNeighbors();
+               System.out.println("You are in: "+currentpos);
                //display available moves with option to go back to (A)
+               System.out.println("You can move to:");
+               for(int i = 0; i < 4; i++){
+                  if(neighbors[i] != null){
+                     System.out.println(neighbors[i]);
+                  }
+               }
                //take input
-               //check input
-                  //if input is invalid, ask again
-               //move player
+               String move = read.nextLine();
+               read.close();
+               return move;
    }
    private static void Act(int tokens){
                //if act:
