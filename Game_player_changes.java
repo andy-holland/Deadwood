@@ -7,10 +7,8 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
 import org.w3c.dom.Element;
 import java.io.File;
-
 class Game{
 public static void main(String[] args){
-   
    int SceneCardTotal;
    int DaysLeft = 4;
    int TotalPlayers;
@@ -135,6 +133,7 @@ private part playerpart = new part();
 static int money = 0;
 static int credits = 0;
 boolean LeadingRole;
+boolean hasmoved = true;
    //constructor
    public Player(){
       instance += 1;
@@ -142,51 +141,131 @@ boolean LeadingRole;
    }
    //method to run current player's turn
    public String PlayerTurn(){
-      //open scanner 
-      Scanner read = new Scanner(System.in);
-      String input;
-      System.out.println("Player"+PlayerNum+"'s turn. Your options are:\n");
-      //list available options
-      if(canMove() == true){
-         System.out.println(" move ");
+        //open scanner 
+        Scanner read = new Scanner(System.in);
+        String input;
+        System.out.println("Player"+PlayerNum+"'s turn. Your options are:\n");
+
+        //list available options
+        if(canMove(hasmoved) == true){
+        	System.out.println(" move ");
+        }
+
+        if(canAct() == true){
+        	System.out.println(" act (this will end your turn)");
+        }
+
+        if(canUpgrade() == true){
+        	System.out.println(" upgrade ");
+        }
+
+        if(canRehearse() == true){
+        	System.out.println(" rehearse (this will end your turn)");
+        }
+
+	if(canClaimRole() == true){
+		System.out.println(" claim role (this will end your turn)");
+	}
+
+        System.out.println(" end turn ");
+        //take input
+        input = read.nextLine();
+        if(read.equals("move") && canMove(hasmoved)){
+		input = "move";
+		hasmoved = true;
+	}
+	
+	else if(read.equals("act") && canAct()){
+		input = "act";
+	}
+
+	else if(read.equals("upgrade") && canUpgrade()){
+		input = "upgrade";
+	}
+
+	else if(read.equals("rehearse") && canRehearse()){
+		input = "rehearse";
+	}
+
+	else if(read.equals("end turn")){
+		input = "end turn";
+	}
+
+	else if(read.equals("claim role") && canClaimRole()){
+		input = "claim role";
+	}
+
+	else{
+		System.out.println("invalid input");
+		input = null;
+	}
+
+        //close scanner
+        read.close();
+        return input;
+   }
+
+   boolean canClaimRole(){
+	boolean canclaimrole = false;
+	if(playerpart.ReturnName() != null){
+		canclaimrole = false;
+	}
+
+        part[] options = currentposition.returnParts();
+        for(int i = 0; i < 4; i++){
+        	if(options[i].ReturnTaken() == false){
+			canclaimrole = true;
+         	}
+        }
+	
+   	return canclaimrole;
+   }
+
+   boolean canMove(boolean hasmoved){
+	boolean canmove = true;
+	if(playerpart.ReturnName() != null){
+		canmove = false;
+	}
+	else if(hasmoved = true){
+		canmove = false;
+	}	
+	return canmove;
+   }
+
+   private boolean canAct(){ 
+      boolean canact = true;
+      if(playerpart.ReturnName() == null){
+      	canact = false;
       }
-      if(canAct() == true){
-         System.out.println(" act (this will end your turn)");
+      return canact;
+   }
+
+   private boolean canUpgrade(){
+      //currentposition
+      boolean canupgrade = false;
+      if(currentposition.returnName().equals("Office")){
+        canupgrade = true;
+      } 
+      return canupgrade;
+   }
+
+   private boolean canRehearse(){
+      boolean canrehearse = true;
+      if(playerpart.ReturnName() == null){
+        canrehearse = false;
       }
-      if(canUpgrade() == true){
-         System.out.println(" upgrade ");
+      return canrehearse;
+   }
+
+   private boolean canTakeRole(){
+      boolean cantakerole = true;
+      if(playerpart.ReturnName() != null){
+        cantakerole = false;
       }
-      if(canRehearse() == true){
-         System.out.println(" rehearse (this will end your turn)");
-      }
-      System.out.println(" end turn ");
-      //take input
-      input = read.nextLine();
-      while(read.equals("move") == false && read.equals("act") == false && read.equals("upgrade") == false && read.equals("rehearse") == false && read.equals("exit") == false){
-         System.out.println("That is not acceptable input. Try again.");
-         input = read.nextLine();
-      }
-      //close scanner
-      read.close();
-      return input;
+      return cantakerole;
    }
-   //these just return true for now but we will change that
-   static boolean canMove(){
-      return true;
-   }
-   private static boolean canAct(){
-      return true;
-   }
-   private static boolean canUpgrade(){
-      return true;
-   }
-   private static boolean canRehearse(){
-      return true;
-   }
-   private static boolean canTakeRole(){
-      return true;
-   }
-   private static void GetInfo(){
+
+   private void GetInfo(){
                //list each player's money, rank, credits, etc.
                //list info about the board
    }
@@ -347,7 +426,7 @@ boolean LeadingRole;
       part[] options = currentposition.returnParts();
       System.out.println("These are the roles available:");
       for(int i = 0; i < 4; i++){
-         if(options[i].ReturnTaken() == true){
+         if(options[i].ReturnTaken() == false){
             System.out.println(options[i].ReturnName());
          }
       }
