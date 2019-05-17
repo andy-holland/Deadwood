@@ -10,98 +10,86 @@ import java.io.File;
 
 class Game{
 public static void main(String[] args){
-   
-   int SceneCardTotal;
-   int DaysLeft = 4;
-   int TotalPlayers;
-   boolean EndTurn = false;
-   Scanner read = new Scanner(System.in);
-   System.out.println("Welcome to Deadwood!\n");
-   System.out.println("How many players are there? You can have 2-8\n");
-   TotalPlayers = read.nextInt();
-   while(TotalPlayers < 2 || TotalPlayers > 8){   
-      System.out.println("That is not a valid amount of players\n");
-      System.out.println("How many players are there? You can have 2-8\n");
-      TotalPlayers = read.nextInt();
-   }
-   if(TotalPlayers < 4){
-      DaysLeft = 3;
-   }
-   System.out.println("Starting the game with "+TotalPlayers+" players\n");
-   System.out.println("Press enter to start the game\n");
-   read.nextLine();
+//Plan out this next
    //1. Set up Board, Rooms, Players
-   //players
    SetupBoard();
    SetupCards();
-   DistrCards();
-   Player player1 = new Player();
-   Player player2 = new Player();
-   Player player3 = new Player();
-   Player player4 = new Player();
-   Player player5 = new Player();
-   Player player6 = new Player();
-   Player player7 = new Player();
-   Player player8 = new Player();
    //2. while not end of game:
-   while(DaysLeft > 0){
+      //while Player's turn
          //check which options are available (move, act, rehearse, upgrade, end turn, display info/score
          //(A)list options
          //take input
          //make sure input is valid
-
+            //if move:
+               //check which moves are available
+               //display available moves with option to go back to (A)
+               //take input
+               //check input
+                  //if input is invalid, ask again
+               //move player
+            //if upgrade:
+               //list upgrades and their costs, give option to return to (A)
+               //take input 
+               //check input
+                  //if input is invalid, ask again
+               //upgrade player
+            //if act:
+               //if player has a role:
+                  //wait for player input to roll dice
+                  //roll dice and determine success/failure
+                  //if success:
+                     //pay player
+                     //tell player that they won and display earnings
+                     //if scene is finished:
+                        //remove rehearse tokens from all players on the scene
+                        //if there are leading actors:
+                           //tell player scene is over and that it is time for bonus roll
+                           //wait on player input to roll dice
+                           //roll dice and distribute winnings
+                           //tell players what they won
+                        //else tell the player that the scene is over
+                  //if fail:
+                     //tell player that they fail
+               //if player does not have a role:
+                  //(B)find and list available roles
+                  //take input
+                  //if input is valid:
+                     //player gets role
+                  //else return to (B)
+            //if rehearse:
+               //add a token to the player
+            //if display info:
+               //list each player's money, rank, credits, etc.
+               //list info about the board
+            //if end turn
+               //go to next player's turn
          //check for end of day
             //if end of day, execute end of day operations and move to next player
       //then go to next player
-   }//<- end of daysleft while loop
-   //close scanner
-   read.close();
+   //3. Display end of game information 
 }
-   static Board DefaultBoard = new Board();
-   static Scenes[] SceneDeck = new Scenes[40];
-   static int[] UsedCards = new int[40];
-   static int UsedCardIndex = 0;
+int TotalPlayers;
+int SceneCardTotal;
+int DaysLeft;
+static Board DefaultBoard = new Board();
+static Scenes[] SceneDeck = new Scenes[40];
+LinkedList<Player> PlayerList = new LinkedList<Player>();
    private static void SetupBoard(){
       DefaultBoard.getBoard();
       set[] SetList = new set[12];
       SetList = DefaultBoard.returnSetlist();
    }
-   
    private static void SetupCards(){
       for(int t = 0; t < 40; t++){
          Scenes Card = new Scenes();
          Card.getCards(t);
          SceneDeck[t] = Card;
-         }
-   }
-   private static void DistrCards(){
-   set[] SetList = new set[12];
-   SetList = DefaultBoard.returnSetlist();
-      for (int t = 0; t < 10; t++){
-         boolean used = false;
-         int cardNum = (int)(Math.random() * 40 + 1);
-         if(UsedCardIndex != 0){
-            for(int y = 0; y < UsedCardIndex-1; y++){
-               if(UsedCards[y] == cardNum){
-                  used = true;
-               }
-            }
-            if (used == false){
-            UsedCards[UsedCardIndex] = cardNum;
-            UsedCardIndex ++; 
-            }
-         }
-         else{
-            UsedCards[UsedCardIndex] = cardNum;
-            UsedCardIndex ++;
-         }
-         SetList[t].UpdateCard(SceneDeck[cardNum]);
       }
    }
-   //private static Player SetupPlayers(){
-      //Player player = new Player();
-      //return player;
-   //}
+   private static Player SetupPlayers(int Playernum, int TotalPlayers){
+   Player Player1 = new Player();
+   return Player1;
+   }
    private static boolean CheckRank(int PlayerRank){
    return true;
    }
@@ -130,62 +118,148 @@ static int tokens = 0;
 String role;
 //id of player
 int PlayerNum;
-private static set currentposition = new set();
+private set currentposition = new set();
+private part playerpart = new part();
 static int money = 0;
 static int credits = 0;
 boolean LeadingRole;
+boolean hasmoved = true;
    //constructor
    public Player(){
       instance += 1;
       PlayerNum = instance;
    }
    //method to run current player's turn
-   public void PlayerTurn(){
-      //open scanner 
-      Scanner read = new Scanner(System.in);
-      String input;
-      System.out.println("Player"+PlayerNum+"'s turn. Your options are:\n");
-      //list available options
-      if(canMove() == true){
-         System.out.println(" move ");
-      }
-      if(canAct() == true){
-         System.out.println(" act ");
-      }
-      if(canUpgrade() == true){
-         System.out.println(" upgrade ");
-      }
-      if(canRehearse() == true){
-         System.out.println(" rehearse ");
-      }
-      System.out.println(" exit\n");
-      //take input
-      input = read.nextLine();
-      while(read.equals("move") == false && read.equals("act") == false && read.equals("upgrade") == false && read.equals("rehearse") == false && read.equals("exit") == false){
-         System.out.println("That is not acceptable input. Try again.");
-         input = read.nextLine();
-      }
-      //close scanner
-      read.close();
+   public String PlayerTurn(){
+        //open scanner 
+        Scanner read = new Scanner(System.in);
+        String input;
+        System.out.println("Player"+PlayerNum+"'s turn. Your options are:\n");
+
+        //list available options
+        if(canMove(hasmoved) == true){
+        	System.out.println(" move ");
+        }
+
+        if(canAct() == true){
+        	System.out.println(" act (this will end your turn)");
+        }
+
+        if(canUpgrade() == true){
+        	System.out.println(" upgrade ");
+        }
+
+        if(canRehearse() == true){
+        	System.out.println(" rehearse (this will end your turn)");
+        }
+
+	if(canClaimRole() == true){
+		System.out.println(" claim role (this will end your turn)");
+	}
+
+        System.out.println(" end turn ");
+        //take input
+        input = read.nextLine();
+        if(read.equals("move") && canMove(hasmoved)){
+		input = "move";
+		hasmoved = true;
+	}
+	
+	else if(read.equals("act") && canAct()){
+		input = "act";
+	}
+
+	else if(read.equals("upgrade") && canUpgrade()){
+		input = "upgrade";
+	}
+
+	else if(read.equals("rehearse") && canRehearse()){
+		input = "rehearse";
+	}
+
+	else if(read.equals("end turn")){
+		input = "end turn";
+	}
+
+	else if(read.equals("claim role") && canClaimRole()){
+		input = "claim role";
+	}
+
+	else{
+		System.out.println("invalid input");
+		input = null;
+	}
+
+        //close scanner
+        read.close();
+        return input;
    }
-   //these just return true for now but we will change that
-   static boolean canMove(){
-      return true;
+
+   boolean canClaimRole(){
+	boolean canclaimrole = false;
+	if(playerpart.ReturnName() != null){
+		canclaimrole = false;
+	}
+
+        part[] options = currentposition.returnParts();
+        for(int i = 0; i < 4; i++){
+        	if(options[i].ReturnTaken() == false){
+			canclaimrole = true;
+         	}
+        }
+	
+   	return canclaimrole;
    }
-   private static boolean canAct(){
-      return true;
+
+   boolean canMove(boolean hasmoved){
+	boolean canmove = true;
+	if(playerpart.ReturnName() != null){
+		canmove = false;
+	}
+	else if(hasmoved = true){
+		canmove = false;
+	}	
+	return canmove;
    }
-   private static boolean canUpgrade(){
-      return true;
+
+   private boolean canAct(){ 
+      boolean canact = true;
+      if(playerpart.ReturnName() == null){
+      	canact = false;
+      }
+      return canact;
    }
-   private static boolean canRehearse(){
-      return true;
+
+   private boolean canUpgrade(){
+      //currentposition
+      boolean canupgrade = false;
+      if(currentposition.returnName().equals("Office")){
+        canupgrade = true;
+      } 
+      return canupgrade;
    }
-   private static void GetInfo(){
+
+   private boolean canRehearse(){
+      boolean canrehearse = true;
+      if(playerpart.ReturnName() == null){
+        canrehearse = false;
+      }
+      return canrehearse;
+   }
+
+   private boolean canTakeRole(){
+      boolean cantakerole = true;
+      if(playerpart.ReturnName() != null){
+        cantakerole = false;
+      }
+      return cantakerole;
+   }
+
+   private void GetInfo(){
                //list each player's money, rank, credits, etc.
                //list info about the board
    }
-   private static String Move(int position){
+   private String Move(int position){
                Scanner read = new Scanner(System.in);
                //if move:
                //check which moves are available
@@ -204,30 +278,9 @@ boolean LeadingRole;
                read.close();
                return move;
    }
-   private static void Act(int tokens){
-               //if act:
-               //if player has a role:
-                  //wait for player input to roll dice
-                  //roll dice and determine success/failure
-                  //if success:
-                     //pay player
-                     //tell player that they won and display earnings
-                     //if scene is finished:
-                        //remove rehearse tokens from all players on the scene
-                        //if there are leading actors:
-                           //tell player scene is over and that it is time for bonus roll
-                           //wait on player input to roll dice
-                           //roll dice and distribute winnings
-                           //tell players what they won
-                        //else tell the player that the scene is over
-                  //if fail:
-                     //tell player that they fail
-               //if player does not have a role:
-                  //(B)find and list available roles
-                  //take input
-                  //if input is valid:
-                     //player gets role
-                  //else return to (B)
+   private static int Act(int tokens){
+      Dice dice = new Dice();
+      return dice.RollDice() + tokens;
    }
    private static void Rehearse(){
       tokens++;
@@ -358,7 +411,18 @@ boolean LeadingRole;
       Arrays.sort(winnings);
       return winnings;
    }
-   private static void ClaimRole(){
+   private String ClaimRole(){//changes playerpart
+      Scanner read = new Scanner(System.in);
+      part[] options = currentposition.returnParts();
+      System.out.println("These are the roles available:");
+      for(int i = 0; i < 4; i++){
+         if(options[i].ReturnTaken() == false){
+            System.out.println(options[i].ReturnName());
+         }
+      }
+      String role = read.nextLine();
+      read.close(); 
+      return role;
    }
    private static void AddMoney(int payout){
       money += payout;
@@ -613,113 +677,113 @@ class DocHandler{
 }
 
 class part{
-private String partName;
-private int partLevel;
-private int Xcord;
-private int Ycord;
-private int Height;
-private int Width;
-private String partLine;
-private boolean partTaken = false;
-public void UpdateName(String Name){
-   partName = Name;
-   return;
+   private String partName;
+   private int partLevel;
+   private int Xcord;
+   private int Ycord;
+   private int Height;
+   private int Width;
+   private String partLine;
+   private boolean partTaken = false;
+   public void UpdateName(String Name){
+      partName = Name;
+      return;
+      }
+   public void UpdateLevel(int part){
+      partLevel = part;
+      return;
+      }
+   public void UpdateLine(String Line){
+      partLine = Line;
+      return;
+      }
+   public void UpdateCord(int x, int y, int h, int w){
+      Xcord = x;
+      Ycord = y;
+      Height = h;
+      Width = w;
+      return;
+      }
+   public void UpdateTaken(){
+      if(partTaken = true){
+         partTaken = false;
+      }
+      else{
+         partTaken = true;
+      }
    }
-public void UpdateLevel(int part){
-   partLevel = part;
-   return;
-   }
-public void UpdateLine(String Line){
-   partLine = Line;
-   return;
-   }
-public void UpdateCord(int x, int y, int h, int w){
-   Xcord = x;
-   Ycord = y;
-   Height = h;
-   Width = w;
-   return;
-   }
-public void UpdateTaken(){
-   if(partTaken = true){
-      partTaken = false;
-   }
-   else{
-      partTaken = true;
-   }
-}
-public String ReturnName(){
-   return partName;   
-   }
-public int ReturnLevel(){
-   return partLevel;
-   }
-public String ReturnLine(){
-   return partLine;
-   }
-public int[] ReturnCord(){
-   int[] cord = new int[4];
-   cord[0] = Xcord;
-   cord[1] = Ycord;
-   cord[2] = Height;
-   cord[3] = Width;
-   return cord;
-   }
-public boolean ReturnTaken(){
-   return partTaken;   
-   }
+   public String ReturnName(){
+      return partName;   
+      }
+   public int ReturnLevel(){
+      return partLevel;
+      }
+   public String ReturnLine(){
+      return partLine;
+      }
+   public int[] ReturnCord(){
+      int[] cord = new int[4];
+      cord[0] = Xcord;
+      cord[1] = Ycord;
+      cord[2] = Height;
+      cord[3] = Width;
+      return cord;
+      }
+   public boolean ReturnTaken(){
+      return partTaken;   
+      }
 }
 
 class set{
-private String setName;
-private String[] neighbors = new String[4];
-private int neighborIndex;
-private int[] setArea = new int[4];
-private part[] partList = new part[4];
-private int partIndex;
-private int[][] shots = new int[3][4];
-private int shotIndex;
-private Scenes SceneCard = new Scenes();
-public void UpdateName(String Name){
-   setName = Name;
+   private String setName;
+   private String[] neighbors = new String[4];
+   private int neighborIndex;
+   private int[] setArea = new int[4];
+   private part[] partList = new part[4];
+   private int partIndex;
+   private int[][] shots = new int[3][4];
+   private int shotIndex;
+   private Scenes SceneCard = new Scenes();
+   public void UpdateName(String Name){
+      setName = Name;
+      }
+   public void AddNeighbor(String neighbor){
+      neighbors[neighborIndex] = neighbor;
+      neighborIndex ++; 
+      }
+   public void UpdateArea(int x, int y, int h, int w){
+      setArea[0] = x;
+      setArea[1] = y;
+      setArea[2] = h;
+      setArea[3] = w;
+      }
+   public void AddPart(part NewPart){
+      partList[partIndex] = NewPart;
+      partIndex ++;
+      }
+   public void ShotsArea(int x, int y, int h, int w){
+      shots[shotIndex][0] = x;
+      shots[shotIndex][1] = y;
+      shots[shotIndex][2] = h;
+      shots[shotIndex][3] = w;
+      shotIndex ++;
+      }
+   public void UpdateCard(Scenes card){
+      SceneCard = card;
    }
-public void AddNeighbor(String neighbor){
-   neighbors[neighborIndex] = neighbor;
-   neighborIndex ++; 
-   }
-public void UpdateArea(int x, int y, int h, int w){
-   setArea[0] = x;
-   setArea[1] = y;
-   setArea[2] = h;
-   setArea[3] = w;
-   }
-public void AddPart(part NewPart){
-   partList[partIndex] = NewPart;
-   partIndex ++;
-   }
-public void ShotsArea(int x, int y, int h, int w){
-   shots[shotIndex][0] = x;
-   shots[shotIndex][1] = y;
-   shots[shotIndex][2] = h;
-   shots[shotIndex][3] = w;
-   shotIndex ++;
-   }
-public void UpdateCard(Scenes card){
-   SceneCard = card;
-}
-public String returnName(){
-   return setName;
-   }
-public String[] returnNeighbors(){
-   return neighbors;
-   }
-public int[] returnArea(){
-   return setArea;
-   }
-public part[] returnParts(){
-   return partList;
-   }
-public int[] returnShotArea(){
-   return shots[shotIndex-1];
+   public String returnName(){
+      return setName;
+      }
+   public String[] returnNeighbors(){
+      return neighbors;
+      }
+   public int[] returnArea(){
+      return setArea;
+      }
+   public part[] returnParts(){
+      return partList;
+      }
+   public int[] returnShotArea(){
+      return shots[shotIndex-1];
    }
 }
