@@ -53,17 +53,42 @@ public static void main(String[] args){
       String name = read.nextLine();
       PlayerList[p].UpdateName(name);
    }
-   //2. while not end of game:
-   while(DaysLeft > 0){
-         //check which options are available (move, act, rehearse, upgrade, end turn, display info/score
-         //(A)list options
-         //take input
-         //make sure input is valid
+		int tracker = 0;
+		while(DaysLeft > 0){
+			System.out.println(PlayerList[tracker].GiveName()+": it is your turn");
+			boolean endturn = false;
+			while(endturn == false){
+				String input = PlayerList[tracker].PlayerTurn();
+				if(input == "move"){
+					//PlayerList[tracker].Move();
+				}
 
-         //check for end of day
-            //if end of day, execute end of day operations and move to next player
-      //then go to next player
-   }//<- end of daysleft while loop
+				else if(input == "upgrade"){
+				//	PlayerList[tracker].Upgrade();
+				}
+				
+				else if(input == "get player info"){
+					PlayerList[tracker].GetInfo();			
+				}
+				
+				else if(input == "rehearse"){
+					endturn = true;
+				}
+
+				else if(input == "claim role"){
+					endturn = true;
+				}
+
+				else if(input == "end turn"){
+					endturn = true;
+				}
+
+				else if(input == "act"){
+					endturn = true;
+				}
+			}
+			DaysLeft = 0;
+		}
    //close scanner
    read.close();
 }
@@ -363,7 +388,7 @@ private boolean hasmoved = false;
       return cantakerole;
    }
 
-   private void GetInfo(){
+   public void GetInfo(){
       System.out.println("Player name: "+PlayerName);
       System.out.println("Rank: "+rank);
       System.out.println("money: "+money);
