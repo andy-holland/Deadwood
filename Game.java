@@ -7,127 +7,235 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
 import org.w3c.dom.Element;
 import java.io.File;
-
 class Game{
+static Board DefaultBoard = new Board();
+static Scenes[] SceneDeck = new Scenes[40];
+static int[] UsedCards = new int[40];
+static int UsedCardIndex = 0;
+static set[] SetList = new set[12];
+static int SceneCardTotal;
+static int DaysLeft = 4;
+static int TotalPlayers;
+static boolean EndTurn = false;
 public static void main(String[] args){
-//Plan out this next
+   int SceneCardTotal;
+   int DaysLeft = 4;
+   int TotalPlayers;
+   boolean EndTurn = false;
+   Scanner read = new Scanner(System.in);
+   System.out.println("Welcome to Deadwood!\n");
+   System.out.println("How many players are there? You can have 2-8\n");
+   TotalPlayers = read.nextInt();
+   while(TotalPlayers < 2 || TotalPlayers > 8){   
+      System.out.println("That is not a valid amount of players\n");
+      System.out.println("How many players are there? You can have 2-8\n");
+      TotalPlayers = read.nextInt();
+   }
+   if(TotalPlayers < 4){
+      DaysLeft = 3;
+   }
+   System.out.println("Starting the game with "+TotalPlayers+" players\n");
+   //System.out.println("Press enter to start the game\n");
+   //read.nextLine();
    //1. Set up Board, Rooms, Players
+   //players
    SetupBoard();
    SetupCards();
+   DistrCards();
+   Player[] PlayerList = new Player[TotalPlayers];
+   for(int p = 0; p < TotalPlayers; p++){
+      Player Initial = Player.Builder(TotalPlayers);
+      if(Initial != null){
+         PlayerList[p] = Initial;
+      }
+      int translate = p+1;
+      System.out.println("What is the name of Player "+translate+"?\n");
+      String name = read.nextLine();
+      PlayerList[p].UpdateName(name);
+   }
    //2. while not end of game:
-      //while Player's turn
+   while(DaysLeft > 0){
          //check which options are available (move, act, rehearse, upgrade, end turn, display info/score
          //(A)list options
          //take input
          //make sure input is valid
-            //if move:
-               //check which moves are available
-               //display available moves with option to go back to (A)
-               //take input
-               //check input
-                  //if input is invalid, ask again
-               //move player
-            //if upgrade:
-               //list upgrades and their costs, give option to return to (A)
-               //take input 
-               //check input
-                  //if input is invalid, ask again
-               //upgrade player
-            //if act:
-               //if player has a role:
-                  //wait for player input to roll dice
-                  //roll dice and determine success/failure
-                  //if success:
-                     //pay player
-                     //tell player that they won and display earnings
-                     //if scene is finished:
-                        //remove rehearse tokens from all players on the scene
-                        //if there are leading actors:
-                           //tell player scene is over and that it is time for bonus roll
-                           //wait on player input to roll dice
-                           //roll dice and distribute winnings
-                           //tell players what they won
-                        //else tell the player that the scene is over
-                  //if fail:
-                     //tell player that they fail
-               //if player does not have a role:
-                  //(B)find and list available roles
-                  //take input
-                  //if input is valid:
-                     //player gets role
-                  //else return to (B)
-            //if rehearse:
-               //add a token to the player
-            //if display info:
-               //list each player's money, rank, credits, etc.
-               //list info about the board
-            //if end turn
-               //go to next player's turn
+
          //check for end of day
             //if end of day, execute end of day operations and move to next player
       //then go to next player
-   //3. Display end of game information 
+   }//<- end of daysleft while loop
+   //close scanner
+   read.close();
 }
-int TotalPlayers;
-int SceneCardTotal;
-int DaysLeft;
-static Board DefaultBoard = new Board();
-static Scenes[] SceneDeck = new Scenes[40];
-LinkedList<Player> PlayerList = new LinkedList<Player>();
    private static void SetupBoard(){
       DefaultBoard.getBoard();
       set[] SetList = new set[12];
       SetList = DefaultBoard.returnSetlist();
    }
+   
    private static void SetupCards(){
       for(int t = 0; t < 40; t++){
          Scenes Card = new Scenes();
          Card.getCards(t);
          SceneDeck[t] = Card;
+         }
+   }
+   private static void DistrCards(){
+   set[] SetList = new set[12];
+   SetList = DefaultBoard.returnSetlist();
+      for (int t = 0; t < 10; t++){
+         boolean used = false;
+         int cardNum = (int)(Math.random() * 40);
+         if(UsedCardIndex != 0){
+            for(int y = 0; y < UsedCardIndex-1; y++){
+               if(UsedCards[y] == cardNum){
+                  used = true;
+               }
+            }
+            if (used == false){
+            UsedCards[UsedCardIndex] = cardNum;
+            UsedCardIndex ++; 
+            }
+         }
+         else{
+            UsedCards[UsedCardIndex] = cardNum;
+            UsedCardIndex ++;
+         }
+         SetList[t].UpdateCard(SceneDeck[cardNum]);
       }
    }
-   private static Player SetupPlayers(int Playernum, int TotalPlayers){
-   Player Player1 = new Player();
-   return Player1;
+   private static void ClaimingRole(Player player){
+      part Role = player.ClaimRole();
+      while(Role != null){
+         if(CheckRank(player, Role)){
+            Role.UpdateTaken();
+            player.UpdateRole(Role);
+            break;
+         }
+         else{
+            System.out.println("you are not high enough rank for that role.");
+            ClaimingRole(player);
+         }
+      }
    }
-   private static boolean CheckRank(int PlayerRank){
-   return true;
+   private static boolean CheckRank(Player player, part part){
+      boolean allowed = false;
+      if(player.GiveRank() >= part.ReturnLevel()){
+         allowed = true;
+      }
+      return allowed;
    }
-   private static boolean CheckCastingOffice(){
-   return true;
+   private static boolean CheckCastingOffice(Player player){
+      boolean office = false;
+      if(player.GivePosition() == SetList[11]){
+         office = true;
+      }
+   return office;
    }
-   private static int CreditPayout(){
-   return 0;
+   private static void Payout(Player player){
+      boolean card = player.GiveOnCard();
+      if(card){
+         player.AddCredits(2);
+      }
+      else{
+         player.AddCredits(1);
+         player.AddMoney(1);
+      }
+      
    }
-   private static int MoneyPayout(){
-   return 0;
+   private static void BonusPayout(Player player, Player[] PlayerList){
+      set currentSet = player.GivePosition();
+      int diceNum = currentSet.returnScene().GiveBudget();
+      int[] rolls = new int[diceNum];
+      Player[] RoleLoc = new Player[6]; 
+      for(int k = 0; k < diceNum; k++){
+         Dice DiceB = new Dice();
+         rolls[k] = DiceB.RollDice();
+      }
+      Arrays.sort(rolls);
+      for(int y = 0; y < TotalPlayers; y++){
+         if(PlayerList[y].GivePosition() == currentSet){
+            if(PlayerList[y].GiveOnCard()){
+               RoleLoc[PlayerList[y].GivePart().ReturnLevel()-1] = PlayerList[y];
+            }
+            else{
+               PlayerList[y].AddMoney(PlayerList[y].GivePart().ReturnLevel());
+            }
+         }
+      }
+      int scroller = 5;
+      while(diceNum != 0){
+         if(RoleLoc[scroller] != null){
+            RoleLoc[scroller].AddMoney(rolls[diceNum]);
+            diceNum--;
+         }
+         if(scroller == 0){
+            scroller = 5;
+         }
+      }
    }
-   private static int BonusPayout(){
-   return 0;
-   }
-   private static void ResetDay(){
+   private static void ResetDay(Player[] PlayerList){
+      SetList = DefaultBoard.returnSetlist();
+      DistrCards();
+      for(int r = 0; r < TotalPlayers; r++){ 
+         PlayerList[r].UpdateLoc(SetList[10]);
+      }
+      DaysLeft --;
    }
    private static void EndGame(){
+   
    }
 }
 
 class Player{
-static int instance;
-int rank = 1;
-static int tokens = 0;
-String role;
+private static int instance;
+private int rank = 1;
+private static int tokens = 0;
+private String role;
 //id of player
+String PlayerName;
 int PlayerNum;
 private set currentposition = new set();
 private part playerpart = new part();
-static int money = 0;
-static int credits = 0;
-boolean LeadingRole;
-boolean hasmoved = true;
+private int money = 0;
+private int credits = 0;
+private boolean hasmoved = false;
    //constructor
-   public Player(){
+   private Player(){
       instance += 1;
       PlayerNum = instance;
+   }
+   static public Player Builder(int NumofPlayers){
+      Player creation = null;
+      if(instance <= NumofPlayers && instance <= 8){
+         creation = new Player();
+         return creation;
+      }
+      return creation;
+   }
+   public void UpdateRole(part role){
+      playerpart = role;
+   }
+   public void UpdateLoc(set setname){
+      currentposition = setname;
+   }
+   public void UpdateName(String name){
+      PlayerName = name;
+   }
+   public String GiveName(){
+      return PlayerName;
+   }
+   public int GiveRank(){
+      return rank;
+   }
+   public set GivePosition(){
+      return currentposition;
+   }
+   public part GivePart(){
+      return playerpart;
+   }
+   public boolean GiveOnCard(){
+      return playerpart.ReturnOnCard();
    }
    //method to run current player's turn
    public String PlayerTurn(){
@@ -256,8 +364,15 @@ boolean hasmoved = true;
    }
 
    private void GetInfo(){
-               //list each player's money, rank, credits, etc.
-               //list info about the board
+      System.out.println("Player name: "+PlayerName);
+      System.out.println("Rank: "+rank);
+      System.out.println("money: "+money);
+      System.out.println("credits: "+credits);
+      System.out.println("set: "+currentposition.returnName());
+      if(playerpart.ReturnName() != null){
+         System.out.println("scene: "+currentposition.returnScene());
+         System.out.println("role: "+playerpart.ReturnName());
+      }
    }
    private String Move(int position){
                Scanner read = new Scanner(System.in);
@@ -278,14 +393,14 @@ boolean hasmoved = true;
                read.close();
                return move;
    }
-   private static int Act(int tokens){
+   public int Act(int tokens){
       Dice dice = new Dice();
       return dice.RollDice() + tokens;
    }
-   private static void Rehearse(){
+   public void Rehearse(){
       tokens++;
    }
-   private static void Upgrade(int money, int credits, int rank, int desired_rank, int money_or_credits){
+   public static void Upgrade(int money, int credits, int rank, int desired_rank, int money_or_credits){
    //money_or_credits is so we know whic they want to pay with. 0 for money, 1 for credits
          if(desired_rank < rank){
             //send message that you can't upgrade to a lower rank
@@ -400,7 +515,7 @@ boolean hasmoved = true;
          }
    }
    
-   private static int [] BonusRoll(int num_dice, int players[]){
+   public int [] BonusRoll(int num_dice, int players[]){
       int [] winnings = new int [num_dice];
       Dice dice = new Dice();
       //store each roll(rolls one at a time)
@@ -411,24 +526,43 @@ boolean hasmoved = true;
       Arrays.sort(winnings);
       return winnings;
    }
-   private String ClaimRole(){//changes playerpart
+   public part ClaimRole(){//changes playerpart
       Scanner read = new Scanner(System.in);
-      part[] options = currentposition.returnParts();
+      part[] optionsB = currentposition.returnParts();
+      part[] optionsS = currentposition.returnScene().GiveParts();
+      part[] optionslist = new part[8];
+      int optionsIndex = 0;
       System.out.println("These are the roles available:");
       for(int i = 0; i < 4; i++){
-         if(options[i].ReturnTaken() == false){
-            System.out.println(options[i].ReturnName());
+         if(optionsB[i].ReturnTaken() == false && optionsB != null){
+            optionslist[optionsIndex] = optionsB[i];
+            System.out.println(""+optionsIndex+". "+optionslist[optionsIndex].ReturnName()+" level: "+optionslist[optionsIndex].ReturnLevel());
+            optionsIndex ++;
          }
       }
-      String role = read.nextLine();
+      for(int i = 0; i < 3; i++){
+         if(optionsS[i].ReturnTaken() == false && optionsS[i] != null){
+            optionslist[optionsIndex] = optionsS[i];
+            System.out.println(""+optionsIndex+". "+optionslist[optionsIndex].ReturnName()+" level: "+optionslist[optionsIndex].ReturnLevel());
+            optionsIndex ++;
+         }
+      }
+      System.out.println(optionsIndex+". Do not claim a role");
+      int role = read.nextInt();
       read.close(); 
-      return role;
+      return optionslist[role];
    }
-   private static void AddMoney(int payout){
+   public void AddMoney(int payout){
       money += payout;
    }
-   private static void AddCredits(int payout){
+   public int GiveMoney(){
+      return money;
+   }
+   public void AddCredits(int payout){
       credits =+ payout;
+   }
+   public int GiveCredits(){
+      return credits;
    }
 }
 
@@ -518,11 +652,9 @@ private set[] SetList = new set[12];
                   SetPart.UpdateCord(partx, party, parth, partw);
                   String quote = partContents.item(3).getTextContent();
                   SetPart.UpdateLine(quote);
+                  SetPart.UpdateOnCard(false);
                   Set.AddPart(SetPart); 
                }
-            }
-            else if("set".equals(setData.getNodeName())){
-               System.out.println("here");
             }
          }
       SetList[t] = Set;
@@ -599,6 +731,9 @@ private int sceneNum;
 private part[] partList = new part[3];
 private int partIndex = 0;
 //get card data from xml file
+   public int GiveBudget(){
+      return budget;
+   }
    public void getCards(int cardNum){
       try{
          doc = cardsDoc.getDoc("cards.xml");
@@ -653,10 +788,14 @@ private int partIndex = 0;
                      addPart.UpdateLine(quote);
                   }
                 }
+             addPart.UpdateOnCard(true);
              partList[partIndex] = addPart;
              partIndex ++;
              }
           }
+   }
+   public part[] GiveParts(){
+      return partList;
    }
 }
 
@@ -677,113 +816,123 @@ class DocHandler{
 }
 
 class part{
-   private String partName;
-   private int partLevel;
-   private int Xcord;
-   private int Ycord;
-   private int Height;
-   private int Width;
-   private String partLine;
-   private boolean partTaken = false;
-   public void UpdateName(String Name){
-      partName = Name;
-      return;
-      }
-   public void UpdateLevel(int part){
-      partLevel = part;
-      return;
-      }
-   public void UpdateLine(String Line){
-      partLine = Line;
-      return;
-      }
-   public void UpdateCord(int x, int y, int h, int w){
-      Xcord = x;
-      Ycord = y;
-      Height = h;
-      Width = w;
-      return;
-      }
-   public void UpdateTaken(){
-      if(partTaken = true){
-         partTaken = false;
-      }
-      else{
-         partTaken = true;
-      }
+private String partName;
+private int partLevel;
+private int Xcord;
+private int Ycord;
+private int Height;
+private int Width;
+private String partLine;
+private boolean partTaken = false;
+private boolean OnCard;
+public void UpdateOnCard(boolean card){
+   OnCard = card;
+}
+public void UpdateName(String Name){
+   partName = Name;
+   return;
    }
-   public String ReturnName(){
-      return partName;   
-      }
-   public int ReturnLevel(){
-      return partLevel;
-      }
-   public String ReturnLine(){
-      return partLine;
-      }
-   public int[] ReturnCord(){
-      int[] cord = new int[4];
-      cord[0] = Xcord;
-      cord[1] = Ycord;
-      cord[2] = Height;
-      cord[3] = Width;
-      return cord;
-      }
-   public boolean ReturnTaken(){
-      return partTaken;   
-      }
+public void UpdateLevel(int part){
+   partLevel = part;
+   return;
+   }
+public void UpdateLine(String Line){
+   partLine = Line;
+   return;
+   }
+public void UpdateCord(int x, int y, int h, int w){
+   Xcord = x;
+   Ycord = y;
+   Height = h;
+   Width = w;
+   return;
+   }
+public void UpdateTaken(){
+   if(partTaken = true){
+      partTaken = false;
+   }
+   else{
+      partTaken = true;
+   }
+}
+public String ReturnName(){
+   return partName;   
+   }
+public int ReturnLevel(){
+   return partLevel;
+   }
+public String ReturnLine(){
+   return partLine;
+   }
+public int[] ReturnCord(){
+   int[] cord = new int[4];
+   cord[0] = Xcord;
+   cord[1] = Ycord;
+   cord[2] = Height;
+   cord[3] = Width;
+   return cord;
+   }
+public boolean ReturnTaken(){
+   return partTaken;   
+   }
+public boolean ReturnOnCard(){
+   return OnCard;
+}
 }
 
 class set{
-   private String setName;
-   private String[] neighbors = new String[4];
-   private int neighborIndex;
-   private int[] setArea = new int[4];
-   private part[] partList = new part[4];
-   private int partIndex;
-   private int[][] shots = new int[3][4];
-   private int shotIndex;
-   private Scenes SceneCard = new Scenes();
-   public void UpdateName(String Name){
-      setName = Name;
-      }
-   public void AddNeighbor(String neighbor){
-      neighbors[neighborIndex] = neighbor;
-      neighborIndex ++; 
-      }
-   public void UpdateArea(int x, int y, int h, int w){
-      setArea[0] = x;
-      setArea[1] = y;
-      setArea[2] = h;
-      setArea[3] = w;
-      }
-   public void AddPart(part NewPart){
-      partList[partIndex] = NewPart;
-      partIndex ++;
-      }
-   public void ShotsArea(int x, int y, int h, int w){
-      shots[shotIndex][0] = x;
-      shots[shotIndex][1] = y;
-      shots[shotIndex][2] = h;
-      shots[shotIndex][3] = w;
-      shotIndex ++;
-      }
-   public void UpdateCard(Scenes card){
-      SceneCard = card;
+private String setName;
+private String[] neighbors = new String[4];
+private int neighborIndex;
+private int[] setArea = new int[4];
+private part[] partList = new part[4];
+private int partIndex;
+private int[][] shots = new int[3][4];
+private int shotIndex;
+private Scenes SceneCard = new Scenes();
+public void UpdateName(String Name){
+   setName = Name;
    }
-   public String returnName(){
-      return setName;
-      }
-   public String[] returnNeighbors(){
-      return neighbors;
-      }
-   public int[] returnArea(){
-      return setArea;
-      }
-   public part[] returnParts(){
-      return partList;
-      }
-   public int[] returnShotArea(){
-      return shots[shotIndex-1];
+public void AddNeighbor(String neighbor){
+   neighbors[neighborIndex] = neighbor;
+   neighborIndex ++; 
+   }
+public void UpdateArea(int x, int y, int h, int w){
+   setArea[0] = x;
+   setArea[1] = y;
+   setArea[2] = h;
+   setArea[3] = w;
+   }
+public void AddPart(part NewPart){
+   partList[partIndex] = NewPart;
+   partIndex ++;
+   }
+public void ShotsArea(int x, int y, int h, int w){
+   shots[shotIndex][0] = x;
+   shots[shotIndex][1] = y;
+   shots[shotIndex][2] = h;
+   shots[shotIndex][3] = w;
+   shotIndex ++;
+   }
+public void UpdateCard(Scenes card){
+   SceneCard = card;
+}
+public String returnName(){
+   return setName;
+   }
+public String[] returnNeighbors(){
+   return neighbors;
+   }
+public int[] returnArea(){
+   return setArea;
+   }
+public part[] returnParts(){
+   return partList;
+   }
+public Scenes returnScene(){
+   return SceneCard;
+   }
+public int[] returnShotArea(){
+   return shots[shotIndex-1];
    }
 }
