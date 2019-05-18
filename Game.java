@@ -18,9 +18,6 @@ static int DaysLeft = 4;
 static int TotalPlayers;
 static boolean EndTurn = false;
 public static void main(String[] args){
-   int SceneCardTotal;
-   int DaysLeft = 4;
-   int TotalPlayers;
    boolean EndTurn = false;
    Scanner read = new Scanner(System.in);
    System.out.println("Welcome to Deadwood!\n");
@@ -36,10 +33,10 @@ public static void main(String[] args){
    }
    System.out.println("Starting the game with "+TotalPlayers+" players\n");
    //System.out.println("Press enter to start the game\n");
-   //read.nextLine();
+   read.nextLine();
    //1. Set up Board, Rooms, Players
    //players
-   SetupBoard();
+   SetList = SetupBoard();
    SetupCards();
    DistrCards();
    Player[] PlayerList = new Player[TotalPlayers];
@@ -47,6 +44,7 @@ public static void main(String[] args){
       Player Initial = Player.Builder(TotalPlayers);
       if(Initial != null){
          PlayerList[p] = Initial;
+         PlayerList[p].UpdateLoc(SetList[10]);
       }
       int translate = p+1;
       System.out.println("What is the name of Player "+translate+"?\n");
@@ -60,22 +58,19 @@ public static void main(String[] args){
 			while(endturn == false){
 				String input = PlayerList[tracker].PlayerTurn();
 				if(input == "move"){
-					//PlayerList[tracker].Move();
+					Move(PlayerList[tracker]);
 				}
 
 				else if(input == "upgrade"){
-				//	PlayerList[tracker].Upgrade();
+				   Upgrade(PlayerList[tracker]);
 				}
-				
-				else if(input == "get player info"){
-					PlayerList[tracker].GetInfo();			
-				}
-				
 				else if(input == "rehearse"){
+               PlayerList[tracker].Rehearse();
 					endturn = true;
 				}
 
 				else if(input == "claim role"){
+               ClaimingRole(PlayerList[tracker]);
 					endturn = true;
 				}
 
@@ -84,18 +79,53 @@ public static void main(String[] args){
 				}
 
 				else if(input == "act"){
-					endturn = true;
+               boolean Bonus = false;
+               boolean SceneDone = Act(PlayerList[tracker], PlayerList[tracker].Act(PlayerList[tracker].GiveTokens()));
+               if(SceneDone){
+                  set CheckerSet = PlayerList[tracker].GivePosition();
+                  Scenes CheckerCard = CheckerSet.returnScene();
+                  part[] CheckerScene = CheckerCard.GiveParts();
+                  for(int g = 0; g < 3; g++){
+                     if(CheckerScene[g].ReturnTaken()){
+                        Bonus = true;
+                     }
+                  }
+                  if(Bonus){
+                     BonusPayout(PlayerList[tracker], PlayerList);
+                  }
+                  for(int c = 0; c < TotalPlayers; c++){
+                     if(PlayerList[c].GivePosition() == PlayerList[tracker].GivePosition()){
+                        PlayerList[c].GivePart().UpdateTaken();
+                        PlayerList[c].ResetPart();
+                     }
+                  } 
+               }
+				   endturn = true;
 				}
 			}
-			DaysLeft = 0;
+         tracker ++;
+         if(tracker == TotalPlayers){
+            tracker = 0;
+         }
+         int DaySetter = 0;
+         for(int d = 0; d < 12; d++){
+            if(SetList[d].returnShots() > 0){
+               DaySetter ++;
+            }
+         }
+         if(DaySetter == 1){
+            ResetDay(PlayerList);
+         }
 		}
+      EndGame(PlayerList);
    //close scanner
    read.close();
 }
-   private static void SetupBoard(){
+   private static set[] SetupBoard(){
       DefaultBoard.getBoard();
       set[] SetList = new set[12];
       SetList = DefaultBoard.returnSetlist();
+      return SetList;
    }
    
    private static void SetupCards(){
@@ -129,6 +159,40 @@ public static void main(String[] args){
          SetList[t].UpdateCard(SceneDeck[cardNum]);
       }
    }
+   private static void Move(Player player){
+      boolean valid = false;
+      Scanner read = new Scanner(System.in);
+      //if move:
+      //check which moves are available
+      set currentSet = player.GivePosition();
+      String[] neighbors = player.GivePosition().returnNeighbors();
+      System.out.println("You are in: "+currentSet.returnName());
+      //display available moves with option to go back to (A)
+      System.out.println("You can move to:");
+      for(int i = 0; i < 4; i++){
+         if(neighbors[i] != null){
+            System.out.println(neighbors[i]);
+         }
+      }
+      //take input
+      System.out.println("Where would you like to go?");
+      String move = read.nextLine();
+      //read.close();
+      for(int i = 0; i < 4; i++){
+         if(neighbors[i] != null && neighbors[i].equals(move)){
+            valid = true;
+            for(int j = 0; j < 12; j++){
+               if(SetList[j].returnName().equals(move)){
+                  player.UpdateLoc(SetList[j]);
+               }
+            }  
+         }
+      }
+      if(!valid){
+         System.out.println("not a valid move");
+         Move(player);
+      }
+   }
    private static void ClaimingRole(Player player){
       part Role = player.ClaimRole();
       while(Role != null){
@@ -150,6 +214,23 @@ public static void main(String[] args){
       }
       return allowed;
    }
+   private static boolean Act(Player player, int DiceRoll){
+      if(player.GivePosition().returnScene().GiveBudget() <= DiceRoll){
+         Payout(player);
+         player.GivePosition().ShotDone();
+         System.out.println("SUCCESS! total roll: "+DiceRoll+" needed: "+player.GivePosition().returnScene().GiveBudget());
+      }
+      else{
+         Payout(player);
+         System.out.println("FAILURE... total roll: "+DiceRoll+" needed: "+player.GivePosition().returnScene().GiveBudget());
+      }
+      boolean SceneOver = false;
+      if(player.GivePosition().returnShots() == 0){
+         System.out.println("Scene has been completed!");
+         SceneOver = true;
+      }
+      return SceneOver;
+   }
    private static boolean CheckCastingOffice(Player player){
       boolean office = false;
       if(player.GivePosition() == SetList[11]){
@@ -157,15 +238,150 @@ public static void main(String[] args){
       }
    return office;
    }
+   private static void Upgrade(Player player){
+      int input;
+      int newRank;
+      Scanner read = new Scanner(System.in);
+      int money = player.GiveMoney();
+      int credits = player.GiveCredits();
+      int rank = player.GiveRank();
+      System.out.println("Current rank: "+rank);
+      System.out.println("Upgrades:");
+      System.out.println("Rank 2: 4 dollars or 5 credits");
+      System.out.println("Rank 3: 10 dollars or 10 credits");
+      System.out.println("Rank 4: 18 dollars or 15 credits");
+      System.out.println("Rank 5: 28 dollars or 20 credits");
+      System.out.println("Rank 6: 40 dollars or 25 credits");
+      System.out.println("input the number rank that you want");
+      newRank = read.nextInt();
+      while(rank > newRank){
+         System.out.println("you cannot choose a rank lower than your current rank");
+         newRank = read.nextInt();
+      }
+      System.out.println("press 1 to pay with money, press 2 to pay with credits, press 3 to exit upgrade");
+      input = read.nextInt();
+      while(input < 3){
+         if(newRank == 2){
+            if(input == 1){
+               if(money - 4 < 0){
+                  System.out.println("you cannot afford this upgrade with money, switch to credits or quit");
+                  input = read.nextInt();
+               }
+               else{
+                  player.AddMoney(-4);
+                  player.UpdateRank(2);
+               }
+            }
+            else{
+               if(credits - 5 < 0){
+                  System.out.println("you cannot afford this upgrade with credits, switch to money or quit");
+                  input = read.nextInt();
+               }
+               else{
+                  player.AddCredits(-5);
+                  player.UpdateRank(2);
+               }
+            }
+         }
+         else if(newRank == 3){
+            if(input == 1){
+               if(money - 10 < 0){
+                  System.out.println("you cannot afford this upgrade with money, switch to credits or quit");
+                  input = read.nextInt();
+               }
+               else{
+                  player.AddMoney(-10);
+                  player.UpdateRank(3);
+               }
+            }
+            else{
+               if(credits - 10 < 0){
+                  System.out.println("you cannot afford this upgrade with credits, switch to money or quit");
+                  input = read.nextInt();
+               }
+               else{
+                  player.AddCredits(-10);
+                  player.UpdateRank(3);
+               }
+            }
+         }
+         else if(newRank == 4){
+            if(input == 1){
+               if(money - 18 < 0){
+                  System.out.println("you cannot afford this upgrade with money, switch to credits or quit");
+                  input = read.nextInt();
+               }
+               else{
+                  player.AddMoney(-18);
+                  player.UpdateRank(4);
+               }
+            }
+            else{
+               if(credits - 15 < 0){
+                  System.out.println("you cannot afford this upgrade with credits, switch to money or quit");
+                  input = read.nextInt();
+               }
+               else{
+                  player.AddCredits(-15);
+                  player.UpdateRank(4);
+               }
+            }
+         }
+         else if(newRank == 5){
+            if(input == 1){
+               if(money - 28 < 0){
+                  System.out.println("you cannot afford this upgrade with money, switch to credits or quit");
+                  input = read.nextInt();
+               }
+               else{
+                  player.AddMoney(-28);
+                  player.UpdateRank(5);
+               }
+            }
+            else{
+               if(credits - 20 < 0){
+                  System.out.println("you cannot afford this upgrade with credits, switch to money or quit");
+                  input = read.nextInt();
+               }
+               else{
+                  player.AddCredits(-20);
+                  player.UpdateRank(5);
+               }
+            }
+         }
+         else if(newRank == 6){
+            if(input == 1){
+               if(money - 40 < 0){
+                  System.out.println("you cannot afford this upgrade with money, switch to credits or quit");
+                  input = read.nextInt();
+               }
+               else{
+                  player.AddMoney(-40);
+                  player.UpdateRank(6);
+               }
+            }
+            else{
+               if(credits - 25 < 0){
+                  System.out.println("you cannot afford this upgrade with credits, switch to money or quit");
+                  input = read.nextInt();
+               }
+               else{
+                  player.AddCredits(-25);
+                  player.UpdateRank(6);
+               }
+            }
+         }
+      }
+   }
    private static void Payout(Player player){
-      boolean card = player.GiveOnCard();
-      if(card){
-         player.AddCredits(2);
-      }
-      else{
-         player.AddCredits(1);
-         player.AddMoney(1);
-      }
+   boolean card = player.GiveOnCard();
+   if(card){
+      player.AddCredits(2);
+   }
+   else{
+      player.AddCredits(1);
+      player.AddMoney(1);
+   }
       
    }
    private static void BonusPayout(Player player, Player[] PlayerList){
@@ -207,8 +423,12 @@ public static void main(String[] args){
       }
       DaysLeft --;
    }
-   private static void EndGame(){
-   
+   private static void EndGame(Player[] PlayerList){
+      System.out.println("The Game is over! Go away!");
+      for(int m = 0; m < TotalPlayers; m++){
+         PlayerList[m].GetInfo();
+         System.out.println("--------------------------");
+      }
    }
 }
 
@@ -216,7 +436,7 @@ class Player{
 private static int instance;
 private int rank = 1;
 private static int tokens = 0;
-private String role;
+private String roleName;
 //id of player
 String PlayerName;
 int PlayerNum;
@@ -225,6 +445,7 @@ private part playerpart = new part();
 private int money = 0;
 private int credits = 0;
 private boolean hasmoved = false;
+private boolean hasUpgraded = false;
    //constructor
    private Player(){
       instance += 1;
@@ -238,6 +459,9 @@ private boolean hasmoved = false;
       }
       return creation;
    }
+   public void UpdateRoleName(String RoleName){
+      roleName = RoleName;
+   }
    public void UpdateRole(part role){
       playerpart = role;
    }
@@ -246,6 +470,9 @@ private boolean hasmoved = false;
    }
    public void UpdateName(String name){
       PlayerName = name;
+   }
+   public void UpdateRank(int newRank){
+      rank = newRank;
    }
    public String GiveName(){
       return PlayerName;
@@ -259,164 +486,129 @@ private boolean hasmoved = false;
    public part GivePart(){
       return playerpart;
    }
+   public void ResetPart(){
+      playerpart = new part();
+   }
    public boolean GiveOnCard(){
       return playerpart.ReturnOnCard();
+   }
+   public int GiveTokens(){
+      return tokens;
    }
    //method to run current player's turn
    public String PlayerTurn(){
         //open scanner 
-        Scanner read = new Scanner(System.in);
-        String input;
-        System.out.println("Player"+PlayerNum+"'s turn. Your options are:\n");
-
+      Scanner read = new Scanner(System.in);
+      String input;
+      System.out.println("Player"+PlayerNum+"'s turn. Your options are:\n");
+      
         //list available options
-        if(canMove(hasmoved) == true){
-        	System.out.println(" move ");
-        }
-
-        if(canAct() == true){
-        	System.out.println(" act (this will end your turn)");
-        }
-
-        if(canUpgrade() == true){
-        	System.out.println(" upgrade ");
-        }
-
-        if(canRehearse() == true){
-        	System.out.println(" rehearse (this will end your turn)");
-        }
-
-	if(canClaimRole() == true){
-		System.out.println(" claim role (this will end your turn)");
-	}
-
-        System.out.println(" end turn ");
-        //take input
-        input = read.nextLine();
-        if(read.equals("move") && canMove(hasmoved)){
-		input = "move";
-		hasmoved = true;
-	}
-	
-	else if(read.equals("act") && canAct()){
-		input = "act";
-	}
-
-	else if(read.equals("upgrade") && canUpgrade()){
-		input = "upgrade";
-	}
-
-	else if(read.equals("rehearse") && canRehearse()){
-		input = "rehearse";
-	}
-
-	else if(read.equals("end turn")){
-		input = "end turn";
-	}
-
-	else if(read.equals("claim role") && canClaimRole()){
-		input = "claim role";
-	}
-
-	else{
-		System.out.println("invalid input");
-		input = null;
-	}
-
-        //close scanner
-        read.close();
-        return input;
-   }
-
-   boolean canClaimRole(){
-	boolean canclaimrole = false;
-	if(playerpart.ReturnName() != null){
-		canclaimrole = false;
-	}
-
-        part[] options = currentposition.returnParts();
-        for(int i = 0; i < 4; i++){
-        	if(options[i].ReturnTaken() == false){
-			canclaimrole = true;
-         	}
-        }
-	
-   	return canclaimrole;
-   }
-
-   boolean canMove(boolean hasmoved){
-	boolean canmove = true;
-	if(playerpart.ReturnName() != null){
-		canmove = false;
-	}
-	else if(hasmoved = true){
-		canmove = false;
-	}	
-	return canmove;
-   }
-
-   private boolean canAct(){ 
-      boolean canact = true;
-      if(playerpart.ReturnName() == null){
-      	canact = false;
+      if(!hasmoved){
+         System.out.println(" move ");
       }
-      return canact;
-   }
-
-   private boolean canUpgrade(){
-      //currentposition
-      boolean canupgrade = false;
-      if(currentposition.returnName().equals("Office")){
-        canupgrade = true;
-      } 
-      return canupgrade;
-   }
-
-   private boolean canRehearse(){
-      boolean canrehearse = true;
-      if(playerpart.ReturnName() == null){
-        canrehearse = false;
-      }
-      return canrehearse;
-   }
-
-   private boolean canTakeRole(){
-      boolean cantakerole = true;
+      
       if(playerpart.ReturnName() != null){
-        cantakerole = false;
+         System.out.println(" act (this will end your turn)");
       }
-      return cantakerole;
+      
+      if(canUpgrade(hasUpgraded) == true){
+         System.out.println(" upgrade ");
+      }
+      
+      if(playerpart.ReturnName() != null){
+         System.out.println(" rehearse (this will end your turn)");
+      }
+      
+      if(canClaim(playerpart.ReturnName() == null)){
+      	System.out.println(" claim role (this will end your turn)");
+      }
+      System.out.println(" get info ");
+      System.out.println(" end turn ");
+      //take input
+      input = read.nextLine();
+      if(input.equals("move") && !hasmoved){
+		   input = "move";
+		   hasmoved = true;
+	   }
+	
+   	else if(input.equals("act") && playerpart.ReturnName() != null){
+   		input = "act";
+   	}
+   
+   	else if(input.equals("upgrade") && canUpgrade(hasUpgraded)){
+   		input = "upgrade";
+   	}
+   
+   	else if(input.equals("rehearse") && playerpart.ReturnName() != null){
+   		input = "rehearse";
+   	}
+   
+   	else if(input.equals("end turn")){
+   		input = "end turn";
+   	}
+   
+   	else if(input.equals("claim role") && canClaim(playerpart.ReturnName() == null)){
+   		input = "claim role";
+   	}
+      else if(input.equals("get info")){
+         GetInfo();
+      }
+   	else{
+   		System.out.println("invalid input");
+   		input = null;
+   	}
+   
+      //close scanner
+      //read.close();
+      return input;
    }
-
+   private boolean canUpgrade(boolean hasUpgraded){
+      if(currentposition.returnName() == null){
+         hasUpgraded = false;
+      }
+      if(currentposition.returnName().equals("Office")){
+        hasUpgraded = true;
+      } 
+      return hasUpgraded;
+   }
+   private boolean canClaim(boolean OnRole){
+      boolean allowed = false; 
+      if(currentposition.returnName() == null){
+         OnRole = true;
+         return !OnRole;
+      }
+      part[] tempPartList = currentposition.returnParts();
+      part[] tempScenePartList = currentposition.returnScene().GiveParts();
+      if(tempPartList[0] == null){
+         OnRole = true;
+         return !OnRole;
+      }
+      for(int p = 0; p < 4; p++){
+         if(!tempPartList[p].ReturnTaken()){
+            allowed = true;
+            return allowed;
+         }
+      }
+      for(int q = 0; q < 3; q++){
+         if(!tempScenePartList[q].ReturnTaken()){
+            allowed = true;
+            return allowed;
+         }
+      }
+      return !OnRole; 
+   }
    public void GetInfo(){
       System.out.println("Player name: "+PlayerName);
       System.out.println("Rank: "+rank);
       System.out.println("money: "+money);
       System.out.println("credits: "+credits);
+      System.out.println("tokens: "+tokens);
       System.out.println("set: "+currentposition.returnName());
       if(playerpart.ReturnName() != null){
-         System.out.println("scene: "+currentposition.returnScene());
+         System.out.println("scene: "+currentposition.returnScene().GiveName());
+         System.out.println("scene budget: "+currentposition.returnScene().GiveBudget());
          System.out.println("role: "+playerpart.ReturnName());
       }
-   }
-   private String Move(int position){
-               Scanner read = new Scanner(System.in);
-               //if move:
-               //check which moves are available
-               String currentpos = currentposition.returnName();
-               String[] neighbors = currentposition.returnNeighbors();
-               System.out.println("You are in: "+currentpos);
-               //display available moves with option to go back to (A)
-               System.out.println("You can move to:");
-               for(int i = 0; i < 4; i++){
-                  if(neighbors[i] != null){
-                     System.out.println(neighbors[i]);
-                  }
-               }
-               //take input
-               String move = read.nextLine();
-               read.close();
-               return move;
    }
    public int Act(int tokens){
       Dice dice = new Dice();
@@ -425,122 +617,7 @@ private boolean hasmoved = false;
    public void Rehearse(){
       tokens++;
    }
-   public static void Upgrade(int money, int credits, int rank, int desired_rank, int money_or_credits){
-   //money_or_credits is so we know whic they want to pay with. 0 for money, 1 for credits
-         if(desired_rank < rank){
-            //send message that you can't upgrade to a lower rank
-         }
-         if(money_or_credits != 0 && money_or_credits != 1){
-            //send message that this is not a valid option
-         }
-         //RANK TWO
-         if(desired_rank == 2){
-            if(money_or_credits == 0){
-               if(money >= 4){
-                  money = money - 4;
-                  rank = 2;
-               }
-               else{
-                  //send message that they can't afford this upgrade
-               }
-            }
-            if(money_or_credits == 1){
-               if(credits >= 5){
-                  credits = credits - 5;
-                  rank = 2;
-               }
-               else{
-                  //send message that they can't afford this upgrade
-               }
-            }
-         }
-         //RANK THREE
-         if(desired_rank == 3){
-            if(money_or_credits == 0){
-               if(money >= 10){
-                  money = money - 10;
-                  rank = 3;
-               }
-               else{
-                  //send message that they can't afford this upgrade
-               }
-            }
-            if(money_or_credits == 1){
-               if(credits >= 10){
-                  credits = credits - 10;
-                  rank = 3;
-               }
-               else{
-                  //send message that they can't afford this upgrade
-               }
-            }
-         }
-         //RANK FOUR
-         if(desired_rank == 4){
-            if(money_or_credits == 0){
-               if(money >= 18){
-                  money = money - 18;
-                  rank = 4;
-               }
-               else{
-                  //send message that they can't afford this upgrade
-               }
-            }
-            if(money_or_credits == 1){
-               if(credits >= 15){
-                  credits = credits - 15;
-                  rank = 4;
-               }
-               else{
-                  //send message that they can't afford this upgrade
-               }
-            }
-         }
-         //RANK FIVE
-         if(desired_rank == 5){
-            if(money_or_credits == 0){
-               if(money >= 28){
-                  money = money - 28;
-                  rank = 5;
-               }
-               else{
-                  //send message that they can't afford this upgrade
-               }
-            }
-            if(money_or_credits == 1){
-               if(credits >= 20){
-                  credits = credits - 20;
-                  rank = 5;
-               }
-               else{
-                  //send message that they can't afford this upgrade
-               }
-            }
-         }
-         //RANK SIX
-         if(desired_rank == 6){
-            if(money_or_credits == 0){
-               if(money >= 40){
-                  money = money - 40;
-                  rank = 6;
-               }
-               else{
-                  //send message that they can't afford this upgrade
-               }
-            }
-            if(money_or_credits == 1){
-               if(credits >= 25){
-                  credits = credits - 25;
-                  rank = 6;
-               }
-               else{
-                  //send message that they can't afford this upgrade
-               }
-            }
-         }
-   }
-   
-   public int [] BonusRoll(int num_dice, int players[]){
+     public int [] BonusRoll(int num_dice, int players[]){
       int [] winnings = new int [num_dice];
       Dice dice = new Dice();
       //store each roll(rolls one at a time)
@@ -559,22 +636,23 @@ private boolean hasmoved = false;
       int optionsIndex = 0;
       System.out.println("These are the roles available:");
       for(int i = 0; i < 4; i++){
-         if(optionsB[i].ReturnTaken() == false && optionsB != null){
+         if(optionsB != null  && optionsB[i].ReturnTaken() == false){
             optionslist[optionsIndex] = optionsB[i];
             System.out.println(""+optionsIndex+". "+optionslist[optionsIndex].ReturnName()+" level: "+optionslist[optionsIndex].ReturnLevel());
             optionsIndex ++;
          }
       }
       for(int i = 0; i < 3; i++){
-         if(optionsS[i].ReturnTaken() == false && optionsS[i] != null){
+         if(optionsS[i] != null && optionsS[i].ReturnTaken() == false){
             optionslist[optionsIndex] = optionsS[i];
             System.out.println(""+optionsIndex+". "+optionslist[optionsIndex].ReturnName()+" level: "+optionslist[optionsIndex].ReturnLevel());
             optionsIndex ++;
          }
       }
       System.out.println(optionsIndex+". Do not claim a role");
+      System.out.println("input the number of the role you want");
       int role = read.nextInt();
-      read.close(); 
+      read.nextLine();
       return optionslist[role];
    }
    public void AddMoney(int payout){
@@ -584,7 +662,7 @@ private boolean hasmoved = false;
       return money;
    }
    public void AddCredits(int payout){
-      credits =+ payout;
+      credits += payout;
    }
    public int GiveCredits(){
       return credits;
@@ -723,22 +801,6 @@ private set[] SetList = new set[12];
             int officew = Integer.parseInt(OfficeData.getAttributes().getNamedItem("w").getNodeValue());  
             setOffice.UpdateArea(officex, officey, officeh, officew);
          }
-         /*
-         else if("upgrades".equals(OfficeData.getNodeName())){
-            NodeList upgrades = OfficeData.getChildNodes();
-            for(int q = 0; q < upgrades.getLength();q++){
-               Node upgrade = upgrades.item(q);
-               int upgradeLevel = Integer.parseInt(upgrade.getAttributes().getNamedItem("level").getNodeValue());
-               String currency = upgrade.getAttributes().getNamedItem("currency").getNodeValue();
-               int price = Integer.parseInt(upgrade.getAttributes().getNamedItem("amt").getNodeValue());
-               NodeList upgradeArea = upgrade.getChildNodes();
-               int upgradex = Integer.parseInt(upgradeArea.item(0).getAttributes().getNamedItem("x").getNodeValue());               
-               int upgradey = Integer.parseInt(upgradeArea.item(0).getAttributes().getNamedItem("y").getNodeValue());
-               int upgradeh = Integer.parseInt(upgradeArea.item(0).getAttributes().getNamedItem("h").getNodeValue());
-               int upgradew = Integer.parseInt(upgradeArea.item(0).getAttributes().getNamedItem("w").getNodeValue());
-            }
-         }
-         */
       }
   SetList[11] = setOffice;
   }
@@ -758,6 +820,9 @@ private int partIndex = 0;
 //get card data from xml file
    public int GiveBudget(){
       return budget;
+   }
+   public String GiveName(){
+      return sceneName;
    }
    public void getCards(int cardNum){
       try{
@@ -915,6 +980,7 @@ private int partIndex;
 private int[][] shots = new int[3][4];
 private int shotIndex;
 private Scenes SceneCard = new Scenes();
+private int shotsleft = -1;
 public void UpdateName(String Name){
    setName = Name;
    }
@@ -938,12 +1004,24 @@ public void ShotsArea(int x, int y, int h, int w){
    shots[shotIndex][2] = h;
    shots[shotIndex][3] = w;
    shotIndex ++;
+   if(shotsleft == -1){
+      shotsleft = 1;
+   }
+   else{
+      shotsleft ++;
+   }
    }
 public void UpdateCard(Scenes card){
    SceneCard = card;
 }
+public void ShotDone(){
+   shotsleft --;
+}
 public String returnName(){
    return setName;
+   }
+public int returnShots(){
+   return shotsleft;   
    }
 public String[] returnNeighbors(){
    return neighbors;
