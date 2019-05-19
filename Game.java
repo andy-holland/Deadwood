@@ -18,6 +18,7 @@ static int DaysLeft = 4;
 static int TotalPlayers;
 static boolean EndTurn = false;
 public static void main(String[] args){
+   //get total number of players
    boolean EndTurn = false;
    Scanner read = new Scanner(System.in);
    System.out.println("Welcome to Deadwood!\n");
@@ -32,26 +33,27 @@ public static void main(String[] args){
       DaysLeft = 3;
    }
    System.out.println("Starting the game with "+TotalPlayers+" players\n");
-   //System.out.println("Press enter to start the game\n");
    read.nextLine();
-   //1. Set up Board, Rooms, Players
-   //players
+   //create the board and populate sets with random cards
    SetList = SetupBoard();
    SetupCards();
    DistrCards();
    Player[] PlayerList = new Player[TotalPlayers];
+   //initialize players to trailer
    for(int p = 0; p < TotalPlayers; p++){
       Player Initial = Player.Builder(TotalPlayers);
       if(Initial != null){
          PlayerList[p] = Initial;
          PlayerList[p].UpdateLoc(SetList[10]);
       }
+      //name players
       int translate = p+1;
       System.out.println("What is the name of Player "+translate+"?\n");
       String name = read.nextLine();
       PlayerList[p].UpdateName(name);
    }
 		int tracker = 0;
+      //loop until day ends
 		while(DaysLeft > 0){
 			System.out.println(PlayerList[tracker].GiveName()+": it is your turn");
 			boolean endturn = false;
@@ -66,6 +68,7 @@ public static void main(String[] args){
 				}
 				else if(input == "rehearse"){
                PlayerList[tracker].Rehearse();
+               PlayerList[tracker].resetMove();
 					endturn = true;
 				}
 
@@ -76,6 +79,7 @@ public static void main(String[] args){
 
 				else if(input == "end turn"){
 					endturn = true;
+               PlayerList[tracker].resetMove();
 				}
 
 				else if(input == "act"){
@@ -101,6 +105,7 @@ public static void main(String[] args){
                   } 
                }
 				   endturn = true;
+               PlayerList[tracker].resetMove();
 				}
 			}
          tracker ++;
@@ -121,13 +126,14 @@ public static void main(String[] args){
    //close scanner
    read.close();
 }
+//populate board
    private static set[] SetupBoard(){
       DefaultBoard.getBoard();
       set[] SetList = new set[12];
       SetList = DefaultBoard.returnSetlist();
       return SetList;
    }
-   
+//populate cards
    private static void SetupCards(){
       for(int t = 0; t < 40; t++){
          Scenes Card = new Scenes();
@@ -135,6 +141,7 @@ public static void main(String[] args){
          SceneDeck[t] = Card;
          }
    }
+//add cards to sets
    private static void DistrCards(){
    set[] SetList = new set[12];
    SetList = DefaultBoard.returnSetlist();
@@ -159,11 +166,10 @@ public static void main(String[] args){
          SetList[t].UpdateCard(SceneDeck[cardNum]);
       }
    }
+   //check the preposed move and excecute
    private static void Move(Player player){
       boolean valid = false;
       Scanner read = new Scanner(System.in);
-      //if move:
-      //check which moves are available
       set currentSet = player.GivePosition();
       String[] neighbors = player.GivePosition().returnNeighbors();
       System.out.println("You are in: "+currentSet.returnName());
@@ -177,7 +183,6 @@ public static void main(String[] args){
       //take input
       System.out.println("Where would you like to go?");
       String move = read.nextLine();
-      //read.close();
       for(int i = 0; i < 4; i++){
          if(neighbors[i] != null && neighbors[i].equals(move)){
             valid = true;
@@ -193,6 +198,7 @@ public static void main(String[] args){
          Move(player);
       }
    }
+//confirm the role player wants and update
    private static void ClaimingRole(Player player){
       part Role = player.ClaimRole();
       while(Role != null){
@@ -203,10 +209,11 @@ public static void main(String[] args){
          }
          else{
             System.out.println("you are not high enough rank for that role.");
-            ClaimingRole(player);
+            Role = player.ClaimRole();
          }
       }
    }
+//check the player's rank for the role
    private static boolean CheckRank(Player player, part part){
       boolean allowed = false;
       if(player.GiveRank() >= part.ReturnLevel()){
@@ -214,6 +221,7 @@ public static void main(String[] args){
       }
       return allowed;
    }
+//calculate if the player succeed on acting
    private static boolean Act(Player player, int DiceRoll){
       if(player.GivePosition().returnScene().GiveBudget() <= DiceRoll){
          Payout(player);
@@ -231,6 +239,7 @@ public static void main(String[] args){
       }
       return SceneOver;
    }
+   //check to see if player is on office
    private static boolean CheckCastingOffice(Player player){
       boolean office = false;
       if(player.GivePosition() == SetList[11]){
@@ -238,6 +247,7 @@ public static void main(String[] args){
       }
    return office;
    }
+   //Check which upgrade player wants and update player
    private static void Upgrade(Player player){
       int input;
       int newRank;
@@ -373,6 +383,7 @@ public static void main(String[] args){
          }
       }
    }
+   //give money or credits to player
    private static void Payout(Player player){
    boolean card = player.GiveOnCard();
    if(card){
@@ -384,6 +395,7 @@ public static void main(String[] args){
    }
       
    }
+   //give money to all players who get a bonus payout
    private static void BonusPayout(Player player, Player[] PlayerList){
       set currentSet = player.GivePosition();
       int diceNum = currentSet.returnScene().GiveBudget();
@@ -415,6 +427,7 @@ public static void main(String[] args){
          }
       }
    }
+   //reset the players and repopulate the board, reduce days
    private static void ResetDay(Player[] PlayerList){
       SetList = DefaultBoard.returnSetlist();
       DistrCards();
@@ -423,6 +436,7 @@ public static void main(String[] args){
       }
       DaysLeft --;
    }
+   //display the stats at the end of the game
    private static void EndGame(Player[] PlayerList){
       System.out.println("The Game is over! Go away!");
       for(int m = 0; m < TotalPlayers; m++){
@@ -459,6 +473,7 @@ private boolean hasUpgraded = false;
       }
       return creation;
    }
+   //returning variables of player
    public void UpdateRoleName(String RoleName){
       roleName = RoleName;
    }
@@ -495,6 +510,9 @@ private boolean hasUpgraded = false;
    public int GiveTokens(){
       return tokens;
    }
+   public void resetMove(){
+      hasmoved = false;
+   }
    //method to run current player's turn
    public String PlayerTurn(){
         //open scanner 
@@ -519,7 +537,7 @@ private boolean hasUpgraded = false;
          System.out.println(" rehearse (this will end your turn)");
       }
       
-      if(canClaim(playerpart.ReturnName() == null)){
+      if(canClaim(playerpart.ReturnName() == null) && playerpart.ReturnName() == null){
       	System.out.println(" claim role (this will end your turn)");
       }
       System.out.println(" get info ");
@@ -557,20 +575,19 @@ private boolean hasUpgraded = false;
    		System.out.println("invalid input");
    		input = null;
    	}
-   
-      //close scanner
-      //read.close();
       return input;
    }
+   //check if player is allowed to upgrade rank
    private boolean canUpgrade(boolean hasUpgraded){
       if(currentposition.returnName() == null){
          hasUpgraded = false;
       }
-      if(currentposition.returnName().equals("Office")){
+      if(currentposition.returnName().equals("office")){
         hasUpgraded = true;
       } 
       return hasUpgraded;
    }
+   //check if player is allowed to claim a role
    private boolean canClaim(boolean OnRole){
       boolean allowed = false; 
       if(currentposition.returnName() == null){
@@ -597,6 +614,7 @@ private boolean hasUpgraded = false;
       }
       return !OnRole; 
    }
+   //print info on player
    public void GetInfo(){
       System.out.println("Player name: "+PlayerName);
       System.out.println("Rank: "+rank);
@@ -610,13 +628,16 @@ private boolean hasUpgraded = false;
          System.out.println("role: "+playerpart.ReturnName());
       }
    }
+   //roll dice to act
    public int Act(int tokens){
       Dice dice = new Dice();
       return dice.RollDice() + tokens;
    }
+   //add a token for rehearsing
    public void Rehearse(){
       tokens++;
    }
+   //roll dice to get bonus payout
      public int [] BonusRoll(int num_dice, int players[]){
       int [] winnings = new int [num_dice];
       Dice dice = new Dice();
@@ -628,7 +649,7 @@ private boolean hasUpgraded = false;
       Arrays.sort(winnings);
       return winnings;
    }
-   public part ClaimRole(){//changes playerpart
+   public part ClaimRole(){//gives game the role player wants
       Scanner read = new Scanner(System.in);
       part[] optionsB = currentposition.returnParts();
       part[] optionsS = currentposition.returnScene().GiveParts();
@@ -636,7 +657,7 @@ private boolean hasUpgraded = false;
       int optionsIndex = 0;
       System.out.println("These are the roles available:");
       for(int i = 0; i < 4; i++){
-         if(optionsB != null  && optionsB[i].ReturnTaken() == false){
+         if(optionsB[i] != null  && optionsB[i].ReturnTaken() == false){
             optionslist[optionsIndex] = optionsB[i];
             System.out.println(""+optionsIndex+". "+optionslist[optionsIndex].ReturnName()+" level: "+optionslist[optionsIndex].ReturnLevel());
             optionsIndex ++;
@@ -653,8 +674,13 @@ private boolean hasUpgraded = false;
       System.out.println("input the number of the role you want");
       int role = read.nextInt();
       read.nextLine();
+      if(role == optionsIndex){
+         System.out.println("Canceling role claim...");
+         return null;
+      }
       return optionslist[role];
    }
+   //adjust variables of player
    public void AddMoney(int payout){
       money += payout;
    }
@@ -668,7 +694,7 @@ private boolean hasUpgraded = false;
       return credits;
    }
 }
-
+//dice
 class Dice{
    public static int RollDice(){
       int roll = (int)(Math.random() * 6 + 1);
@@ -680,9 +706,11 @@ class Board{
 private DocHandler boardDoc = new DocHandler();
 private Document docB;
 private set[] SetList = new set[12];
+//give the created setlist
    public set[] returnSetlist(){
       return SetList;
    }
+   //get the document to build setlist
    public void getBoard(){
       try{
          docB = boardDoc.getDoc("board.xml");
@@ -693,6 +721,7 @@ private set[] SetList = new set[12];
          ex.printStackTrace();
       }
    }
+   //parse through the document and get the needed data
    public void readBoard(Document docB){
       Element root = docB.getDocumentElement();
       NodeList board = root.getElementsByTagName("set");
@@ -709,6 +738,7 @@ private set[] SetList = new set[12];
          NodeList inside = set.getChildNodes();
          for(int q = 0; q < inside.getLength(); q++){
             Node setData = inside.item(q);
+            //get neighbors
             if("neighbors".equals(setData.getNodeName())){
                NodeList neighbors = setData.getChildNodes();
                for(int u = 1; u < neighbors.getLength(); u = u+2){
@@ -717,6 +747,7 @@ private set[] SetList = new set[12];
                   Set.AddNeighbor(neighborName);
                }
             }
+            //get area of set
             else if("area".equals(setData.getNodeName())){
                int x = Integer.parseInt(setData.getAttributes().getNamedItem("x").getNodeValue());
                int y = Integer.parseInt(setData.getAttributes().getNamedItem("y").getNodeValue());
@@ -724,6 +755,7 @@ private set[] SetList = new set[12];
                int w = Integer.parseInt(setData.getAttributes().getNamedItem("w").getNodeValue());
                Set.UpdateArea(x,y,h,w);
             }
+            //get area and number of takes on set
             else if("takes".equals(setData.getNodeName())){
                NodeList takeList = setData.getChildNodes();
                for(int u = 1; u < takeList.getLength(); u = u+2){
@@ -738,6 +770,7 @@ private set[] SetList = new set[12];
                   Set.ShotsArea(takex, takey, takeh, takew);
                }
             }
+            //get parts on set
             else if("parts".equals(setData.getNodeName())){
                NodeList parts = setData.getChildNodes();
                for(int u = 1; u < parts.getLength(); u = u+2){
@@ -760,8 +793,10 @@ private set[] SetList = new set[12];
                }
             }
          }
+       //update setlist
       SetList[t] = Set;
       }
+      //get the trailer set
       set setTrailer = new set();
       setTrailer.UpdateName("trailer");
       Node trailer_n = trailer.item(0);
@@ -779,9 +814,11 @@ private set[] SetList = new set[12];
       int trailerh = Integer.parseInt(area_t.getAttributes().getNamedItem("h").getNodeValue());
       int trailerw = Integer.parseInt(area_t.getAttributes().getNamedItem("w").getNodeValue());
       setTrailer.UpdateArea(trailerx, trailery, trailerh, trailerw);
+      //add trailer to set list
       SetList[10] = setTrailer;
+      //get the office set
       set setOffice = new set();
-      setOffice.UpdateName("Office");
+      setOffice.UpdateName("office");
       Node Officebuilder = Office.item(0);
       NodeList OfficebuilderL = Officebuilder.getChildNodes();
       for(int t = 0; t < OfficebuilderL.getLength(); t++){
@@ -802,6 +839,7 @@ private set[] SetList = new set[12];
             setOffice.UpdateArea(officex, officey, officeh, officew);
          }
       }
+  //add office to set list
   SetList[11] = setOffice;
   }
 }
@@ -817,13 +855,14 @@ private int budget;
 private int sceneNum;
 private part[] partList = new part[3];
 private int partIndex = 0;
-//get card data from xml file
+//methods to return vairables of scenes
    public int GiveBudget(){
       return budget;
    }
    public String GiveName(){
       return sceneName;
    }
+   //get card data from xml file
    public void getCards(int cardNum){
       try{
          doc = cardsDoc.getDoc("cards.xml");
@@ -888,7 +927,7 @@ private int partIndex = 0;
       return partList;
    }
 }
-
+//parses the doc to return the data
 class DocHandler{
    public static Document getDoc(String filename) throws ParserConfigurationException{
       DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
@@ -904,7 +943,7 @@ class DocHandler{
       return doc;
    }
 }
-
+//class for the specific parts on set and scenes
 class part{
 private String partName;
 private int partLevel;
@@ -915,6 +954,7 @@ private int Width;
 private String partLine;
 private boolean partTaken = false;
 private boolean OnCard;
+//update data
 public void UpdateOnCard(boolean card){
    OnCard = card;
 }
@@ -938,13 +978,14 @@ public void UpdateCord(int x, int y, int h, int w){
    return;
    }
 public void UpdateTaken(){
-   if(partTaken = true){
+   if(partTaken == true){
       partTaken = false;
    }
    else{
       partTaken = true;
    }
 }
+//returning data
 public String ReturnName(){
    return partName;   
    }
@@ -969,7 +1010,7 @@ public boolean ReturnOnCard(){
    return OnCard;
 }
 }
-
+//data for single sets
 class set{
 private String setName;
 private String[] neighbors = new String[4];
@@ -981,6 +1022,7 @@ private int[][] shots = new int[3][4];
 private int shotIndex;
 private Scenes SceneCard = new Scenes();
 private int shotsleft = -1;
+//update data
 public void UpdateName(String Name){
    setName = Name;
    }
@@ -1017,6 +1059,7 @@ public void UpdateCard(Scenes card){
 public void ShotDone(){
    shotsleft --;
 }
+//return data
 public String returnName(){
    return setName;
    }
