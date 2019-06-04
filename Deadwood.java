@@ -2,6 +2,9 @@ import javax.swing.*;
 import java.util.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.ParserConfigurationException;
@@ -9,7 +12,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
 import org.w3c.dom.Element;
-import java.io.File;
 class Deadwood{
    public static void main(String[] args){
    Game Deadwood = new Game();
@@ -47,7 +49,8 @@ public void play(){
    //create the frame for the game with the current boardstate
    SetupCards();
    DistrCards();
-   JFrame Board = build();
+   try{
+      JFrame Board = build();
    Object[] playerOptions = {2,3,4,5,6,7,8};
    TotalPlayers = (int)JOptionPane.showInputDialog(Board, "How many players?","Before we start...",JOptionPane.PLAIN_MESSAGE,null,playerOptions,playerOptions[0]);
    //show the facedown cards in the frame
@@ -160,14 +163,20 @@ public void play(){
       EndGame(PlayerList);
    //close scanner
    //read.close();
+   }
+   catch(IOException ex){
+      System.out.println("IO failure");
+      ex.printStackTrace();
+   }
 }
-   public JFrame build(){
+   public JFrame build()throws IOException{
       JFrame Board = new JFrame("DEADWOOD");
       Board.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-      Board.setSize(400, 400);
-      Board.getContentPane().setLayout(new BorderLayout());
+      Board.setSize(1500, 1800);
+      Board.getContentPane().setLayout(new GridBagLayout());
+      GridBagConstraints c = new GridBagConstraints();
       JPanel action = new JPanel();
-      action.setLayout(new BoxLayout(action, BoxLayout.PAGE_AXIS));
+      action.setLayout(new BoxLayout(action, BoxLayout.LINE_AXIS));
       JButton move = new JButton("Move");
       JButton claimRole = new JButton("Claim Role");
       JButton Act = new JButton("Act");
@@ -198,7 +207,23 @@ public void play(){
       action.add(Reherse);
       action.add(upgrade);
       action.add(endTurn);
-      Board.getContentPane().add(action, BorderLayout.LINE_END);
+      c.anchor = GridBagConstraints.PAGE_START;
+      c.weightx = 0.5;
+      c.gridx = 1;
+      c.gridy = 1;
+      //make tokens for players
+      //add the card image to the bottom right
+      //add the data
+      Board.getContentPane().add(action, c);
+      JPanel Sets = new JPanel();
+      c.anchor = GridBagConstraints.CENTER;
+      c.fill = GridBagConstraints.HORIZONTAL;
+      c.weighty = .5;
+      File image = new File("/home/hollana6/CSCI345/Deadwood-master/Assets/board.jpg");
+      BufferedImage boardPic = ImageIO.read(image);
+      JLabel picBoard = new JLabel(new ImageIcon(boardPic));
+      Sets.add(picBoard);
+      Board.getContentPane().add(Sets, c);
       Board.setVisible(true);
       return Board;
    }
@@ -545,7 +570,7 @@ public void play(){
 class Player{
 private static int instance;
 private int rank = 1;
-private static int tokens = 0;
+private int tokens = 0;
 private String roleName;
 //id of player
 String PlayerName;
@@ -957,6 +982,9 @@ private int partIndex = 0;
    }
    public String GiveName(){
       return sceneName;
+   }
+   public String GiveImage(){
+      return imageNum;
    }
    //get card data from xml file
    public void getCards(int cardNum){
