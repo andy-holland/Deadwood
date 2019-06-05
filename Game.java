@@ -449,7 +449,7 @@ public static void main(String[] args){
 class Player{
 private static int instance;
 private int rank = 1;
-private static int tokens = 0;
+private int tokens = 0;
 private String roleName;
 //id of player
 String PlayerName;
