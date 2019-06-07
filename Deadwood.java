@@ -18,7 +18,7 @@ class Deadwood{
    Deadwood.play();
    }    
 }
-class Game implements ActionListener{
+class Game{
 static Board DefaultBoard = new Board();
 static Scenes[] SceneDeck = new Scenes[40];
 static int[] UsedCards = new int[40];
@@ -49,10 +49,11 @@ public void play(){
    //create the frame for the game with the current boardstate
    SetupCards();
    DistrCards();
-   try{
-      JFrame Board = build();
+   GUI deadwood = new GUI();
+   deadwood.build();
+   deadwood.setVisible(true);
    Object[] playerOptions = {2,3,4,5,6,7,8};
-   TotalPlayers = (int)JOptionPane.showInputDialog(Board, "How many players?","Before we start...",JOptionPane.PLAIN_MESSAGE,null,playerOptions,playerOptions[0]);
+   TotalPlayers = (int)JOptionPane.showInputDialog(deadwood, "How many players?","Before we start...",JOptionPane.PLAIN_MESSAGE,null,playerOptions,playerOptions[0]);
    //show the facedown cards in the frame
    Player[] PlayerList = new Player[TotalPlayers];
    //initialize players to trailer
@@ -61,6 +62,7 @@ public void play(){
       if(Initial != null){
          PlayerList[p] = Initial;
          PlayerList[p].UpdateLoc(SetList[10]);
+         deadwood.pIcons[p].setVisible(true);
       }
       //name players
       int translate = p+1;
@@ -163,89 +165,6 @@ public void play(){
       EndGame(PlayerList);
    //close scanner
    //read.close();
-   }
-   catch(IOException ex){
-      System.out.println("IO failure");
-      ex.printStackTrace();
-   }
-}
-   public JFrame build()throws IOException{
-      JFrame Board = new JFrame("DEADWOOD");
-      Board.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-      Board.setSize(1500, 1800);
-      Board.getContentPane().setLayout(new GridBagLayout());
-      GridBagConstraints c = new GridBagConstraints();
-      JPanel action = new JPanel();
-      action.setLayout(new BoxLayout(action, BoxLayout.LINE_AXIS));
-      JButton move = new JButton("Move");
-      JButton claimRole = new JButton("Claim Role");
-      JButton Act = new JButton("Act");
-      JButton Reherse = new JButton("Reherse");
-      JButton upgrade = new JButton("Upgrade");
-      JButton endTurn = new JButton("End Turn");
-      move.setActionCommand("move");
-      claimRole.setActionCommand("claimRole");
-      Act.setActionCommand("Act");
-      Reherse.setActionCommand("Reherse");
-      upgrade.setActionCommand("upgrade");
-      endTurn.setActionCommand("endturn");
-      move.addActionListener(this);
-      claimRole.addActionListener(this);
-      Act.addActionListener(this);
-      Reherse.addActionListener(this);
-      upgrade.addActionListener(this);
-      endTurn.addActionListener(this);
-      move.setAlignmentX(Component.CENTER_ALIGNMENT);
-      claimRole.setAlignmentX(Component.CENTER_ALIGNMENT);
-      Act.setAlignmentX(Component.CENTER_ALIGNMENT);
-      Reherse.setAlignmentX(Component.CENTER_ALIGNMENT);
-      upgrade.setAlignmentX(Component.CENTER_ALIGNMENT);
-      endTurn.setAlignmentX(Component.CENTER_ALIGNMENT);
-      action.add(move);
-      action.add(claimRole);
-      action.add(Act);
-      action.add(Reherse);
-      action.add(upgrade);
-      action.add(endTurn);
-      c.anchor = GridBagConstraints.PAGE_START;
-      c.weightx = 0.5;
-      c.gridx = 1;
-      c.gridy = 1;
-      //make tokens for players
-      //add the card image to the bottom right
-      //add the data
-      Board.getContentPane().add(action, c);
-      JPanel Sets = new JPanel();
-      c.anchor = GridBagConstraints.CENTER;
-      c.fill = GridBagConstraints.HORIZONTAL;
-      c.weighty = .5;
-      File image = new File("/home/hollana6/CSCI345/Deadwood-master/Assets/board.jpg");
-      BufferedImage boardPic = ImageIO.read(image);
-      JLabel picBoard = new JLabel(new ImageIcon(boardPic));
-      Sets.add(picBoard);
-      Board.getContentPane().add(Sets, c);
-      Board.setVisible(true);
-      return Board;
-   }
-   public void actionPerformed(ActionEvent e){
-      if("move".equals(e.getActionCommand())){
-         System.out.print("moving...\n");
-      }
-      if("claimRole".equals(e.getActionCommand())){
-         System.out.print("claiming role...\n");
-      }
-      if("Act".equals(e.getActionCommand())){
-         System.out.print("Acting...\n");
-      }
-      if("Reherse".equals(e.getActionCommand())){
-         System.out.print("Rehersing...\n");
-      }
-      if("upgrade".equals(e.getActionCommand())){
-         System.out.print("upgrading...\n");
-      }
-      if("endturn".equals(e.getActionCommand())){
-         System.out.print("ending turn...\n");
-      }
    } 
 //populate board
    private static set[] SetupBoard(){
@@ -1205,4 +1124,124 @@ public Scenes returnScene(){
 public int[] returnShotArea(){
    return shots[shotIndex-1];
    }
+}
+class GUI extends JFrame{
+JButton move = new JButton("Move");
+JButton claimRole = new JButton("Claim");
+JButton Act = new JButton("Act");
+JButton Reherse = new JButton("Reherse");      
+JButton upgrade = new JButton("Upgrade");
+JButton endTurn = new JButton("End Turn");
+JLabel Board;
+JLabel[] Card = new JLabel[10];
+JButton[] CardBacks = new JButton[10];
+JLabel[] pIcons = new JLabel[8];
+JLabel Menu;
+JLayeredPane Game;
+public void build(){
+   //creating the frame and board
+   setTitle("DEADWOOD");
+   setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+   Game = getLayeredPane();
+   ImageIcon iconB = new ImageIcon("board.jpg");
+   Board = new JLabel();
+   Board.setIcon(iconB);
+   Board.setBounds(0,0,iconB.getIconWidth(),iconB.getIconHeight());
+   setSize(iconB.getIconWidth(),iconB.getIconHeight()+100);
+   Game.add(Board,new Integer(0));
+   //adding the menu label and buttons
+   Menu = new JLabel("MENU");
+   Menu.setBounds(0,iconB.getIconHeight()+20,100,20);
+   Game.add(Menu, new Integer(2));
+   move.setActionCommand("move");
+   move.setBounds(20,iconB.getIconHeight()+40,100,20);
+   claimRole.setActionCommand("claimRole");
+   claimRole.setBounds(220,iconB.getIconHeight()+40,100,20);
+   Act.setActionCommand("Act");
+   Act.setBounds(420,iconB.getIconHeight()+40,100,20);
+   Reherse.setActionCommand("Reherse");
+   Reherse.setBounds(620,iconB.getIconHeight()+40,100,20);
+   upgrade.setActionCommand("upgrade");
+   upgrade.setBounds(820,iconB.getIconHeight()+40,100,20);
+   endTurn.setActionCommand("endturn");
+   endTurn.setBounds(1020,iconB.getIconHeight()+40,100,20);
+   move.addActionListener(new Actions());
+   claimRole.addActionListener(new Actions());
+   Act.addActionListener(new Actions());
+   Reherse.addActionListener(new Actions());
+   upgrade.addActionListener(new Actions());
+   endTurn.addActionListener(new Actions());
+   Game.add(move, new Integer(2));
+   Game.add(claimRole, new Integer(2));
+   Game.add(Act, new Integer(2));
+   Game.add(Reherse, new Integer(2));
+   Game.add(upgrade, new Integer(2));
+   Game.add(endTurn, new Integer(2));
+   // Add the card to the lower layer
+   Game.add(Card[0], new Integer(1));
+   ImageIcon playerIcon;
+   for (int u = 0; u < 8; u++){ 
+      pIcons[u] = new JLabel();
+      if(u == 0){
+         playerIcon = new ImageIcon("b1.png");
+      }
+      else if(u == 1){
+         playerIcon = new ImageIcon("c1.png");
+      }
+      else if(u == 2){
+         playerIcon = new ImageIcon("g1.png");
+      }
+      else if(u == 3){
+         playerIcon = new ImageIcon("o1.png");
+      }
+      else if(u == 4){
+         playerIcon = new ImageIcon("r1.png");
+      }
+      else if(u == 5){
+         playerIcon = new ImageIcon("p1.png");
+      }
+      else if(u == 6){
+         playerIcon = new ImageIcon("v1.png");
+      }
+      else{
+         playerIcon = new ImageIcon("w1.png");
+      }
+      pIcons[u].setIcon(playerIcon);
+      pIcons[u].setBounds(991,275 + (u*10),playerIcon.getIconWidth(),playerIcon.getIconHeight());
+      pIcons[u].setVisible(false);
+      Game.add(pIcons[u], new Integer(3));
+   }
+  }
+  addCards(set[] setup){
+      for(int s = 0; s < 10; s++){
+         setup[s].
+         Card[s] = new JLabel();
+         ImageIcon cIcon =  new ImageIcon("");
+         Card[s].setIcon(cIcon); 
+         Card[s].setBounds(20,65,cIcon.getIconWidth()+2,cIcon.getIconHeight());
+         //Card[s].setOpaque(true);
+      }
+  }
+}
+class Actions implements ActionListener{
+   public void actionPerformed(ActionEvent e){
+      if("move".equals(e.getActionCommand())){
+         System.out.print("moving...\n");
+      }
+      if("claimRole".equals(e.getActionCommand())){
+         System.out.print("claiming role...\n");
+      }
+      if("Act".equals(e.getActionCommand())){
+         System.out.print("Acting...\n");
+      }
+      if("Reherse".equals(e.getActionCommand())){
+         System.out.print("Rehersing...\n");
+      }
+      if("upgrade".equals(e.getActionCommand())){
+         System.out.print("upgrading...\n");
+      }
+      if("endturn".equals(e.getActionCommand())){
+         System.out.print("ending turn...\n");
+      }
+     }
 }
