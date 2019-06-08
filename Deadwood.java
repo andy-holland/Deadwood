@@ -12,6 +12,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Node;
 import org.w3c.dom.Element;
+
 class Deadwood{
    public static void main(String[] args){
    Game Deadwood = new Game();
@@ -19,6 +20,9 @@ class Deadwood{
    }    
 }
 class Game{
+static GUI deadwood = new GUI();
+static Player[] PlayerList;
+static int tracker = 0;
 static Board DefaultBoard = new Board();
 static Scenes[] SceneDeck = new Scenes[40];
 static int[] UsedCards = new int[40];
@@ -49,13 +53,13 @@ public void play(){
    //create the frame for the game with the current boardstate
    SetupCards();
    DistrCards();
-   GUI deadwood = new GUI();
+
    deadwood.build();
    deadwood.setVisible(true);
    Object[] playerOptions = {2,3,4,5,6,7,8};
    TotalPlayers = (int)JOptionPane.showInputDialog(deadwood, "How many players?","Before we start...",JOptionPane.PLAIN_MESSAGE,null,playerOptions,playerOptions[0]);
    //show the facedown cards in the frame
-   Player[] PlayerList = new Player[TotalPlayers];
+   PlayerList = new Player[TotalPlayers];
    //initialize players to trailer
    for(int p = 0; p < TotalPlayers; p++){
       Player Initial = Player.Builder(TotalPlayers);
@@ -88,16 +92,18 @@ public void play(){
          PlayerList[i].UpdateRank(2);
       }
    }
-		int tracker = 0;
+		
       //loop until day ends
 		while(DaysLeft > 0){
          //change to a dialog message
 			//System.out.println(PlayerList[tracker].GiveName()+": it is your turn");
 			boolean endturn = false;
 			while(endturn == false){
-				String input = PlayerList[tracker].PlayerTurn();
+            /*while(input.equals("")){
+            }
 				if(input == "move"){
 					Move(PlayerList[tracker]);
+               input = "";
                //move needs to check to revel the card on the current set
                //and update the player location
 				}
@@ -146,7 +152,7 @@ public void play(){
                }
 				   endturn = true;
                PlayerList[tracker].resetMove();
-				}
+				}*/
 			}
          tracker ++;
          if(tracker == TotalPlayers){
@@ -207,54 +213,48 @@ public void play(){
       }
    }
    //check the preposed move and excecute
-   private static void Move(Player player){
+   public static void Move(Player player){
       boolean valid = false;
-      Scanner read = new Scanner(System.in);
       set currentSet = player.GivePosition();
-      String[] neighbors = player.GivePosition().returnNeighbors();
-      System.out.println("You are in: "+currentSet.returnName());
-      //display available moves with option to go back to (A)
-      System.out.println("You can move to:");
-      for(int i = 0; i < 4; i++){
-         if(neighbors[i] != null){
-            System.out.println(neighbors[i]);
+      String[] arr = player.GivePosition().returnNeighbors();
+      Object[] neighbors;
+      if(arr[3] == null){
+         neighbors = new Object[3];
+         for(int i = 0; i < 3; i++){
+            neighbors[i] = arr[i];
          }
       }
-      //take input
-      System.out.println("Where would you like to go?");
-      String move = read.nextLine();
-      for(int i = 0; i < 4; i++){
-         if(neighbors[i] != null && neighbors[i].equals(move)){
-            valid = true;
-            for(int j = 0; j < 12; j++){
-               if(SetList[j].returnName().equals(move)){
-                  player.UpdateLoc(SetList[j]);
-               }
-            }  
-         }
+      else{
+         neighbors = new Object[4];
+         neighbors = player.GivePosition().returnNeighbors();
       }
-      if(!valid){
-         System.out.println("not a valid move");
-         Move(player);
+      String selection = (String)JOptionPane.showInputDialog(deadwood, "","Where would you like to move?",JOptionPane.PLAIN_MESSAGE,null,neighbors,neighbors[0]);
+      for(int j = 0; j < 12; j++){
+         if(SetList[j].returnName().equals(selection)){
+            player.UpdateLoc(SetList[j]);
+         }
       }
    }
 //confirm the role player wants and update
-   private static void ClaimingRole(Player player){
-      part Role = player.ClaimRole();
-      while(Role != null){
-         if(CheckRank(player, Role)){
-            Role.UpdateTaken();
-            player.UpdateRole(Role);
-            break;
-         }
-         else{
-            System.out.println("you are not high enough rank for that role.");
-            Role = player.ClaimRole();
-         }
+   public static void ClaimingRole(Player player){
+      part Role = player.ClaimRole(player);
+      //if player hit exit
+      if(Role == null){
+         return;
       }
+      Role.UpdateTaken();
+      player.UpdateRole(Role);
+      /*if(CheckRank(player, Role)){
+         Role.UpdateTaken();
+         player.UpdateRole(Role);
+      }
+      else{
+         System.out.println("you are not high enough rank for that role.");
+         Role = player.ClaimRole();
+      }*/
    }
 //check the player's rank for the role
-   private static boolean CheckRank(Player player, part part){
+   public static boolean CheckRank(Player player, part part){
       boolean allowed = false;
       if(player.GiveRank() >= part.ReturnLevel()){
          allowed = true;
@@ -262,19 +262,19 @@ public void play(){
       return allowed;
    }
 //calculate if the player succeed on acting
-   private static boolean Act(Player player, int DiceRoll){
+   public static boolean Act(Player player, int DiceRoll){
       if(player.GivePosition().returnScene().GiveBudget() <= DiceRoll){
          Payout(player);
          player.GivePosition().ShotDone();
-         System.out.println("SUCCESS! total roll: "+DiceRoll+" needed: "+player.GivePosition().returnScene().GiveBudget());
+         JOptionPane.showMessageDialog(deadwood,"SUCCESS! total roll: "+DiceRoll+" needed: "+player.GivePosition().returnScene().GiveBudget());
       }
       else{
          Payout(player);
-         System.out.println("FAILURE... total roll: "+DiceRoll+" needed: "+player.GivePosition().returnScene().GiveBudget());
+         JOptionPane.showMessageDialog(deadwood,"FAILURE... total roll: "+DiceRoll+" needed: "+player.GivePosition().returnScene().GiveBudget());
       }
       boolean SceneOver = false;
       if(player.GivePosition().returnShots() == 0){
-         System.out.println("Scene has been completed!");
+         JOptionPane.showMessageDialog(deadwood,"Scene has been completed!");
          SceneOver = true;
       }
       return SceneOver;
@@ -288,7 +288,7 @@ public void play(){
    return office;
    }
    //Check which upgrade player wants and update player
-   private static void Upgrade(Player player){
+   public static void Upgrade(Player player){
       int input;
       int newRank;
       Scanner read = new Scanner(System.in);
@@ -424,7 +424,7 @@ public void play(){
       }
    }
    //give money or credits to player
-   private static void Payout(Player player){
+   public static void Payout(Player player){
    boolean card = player.GiveOnCard();
    if(card){
       player.AddCredits(2);
@@ -436,7 +436,7 @@ public void play(){
       
    }
    //give money to all players who get a bonus payout
-   private static void BonusPayout(Player player, Player[] PlayerList){
+   public static void BonusPayout(Player player, Player[] PlayerList){
       set currentSet = player.GivePosition();
       int diceNum = currentSet.returnScene().GiveBudget();
       int[] rolls = new int[diceNum];
@@ -689,36 +689,52 @@ private boolean hasUpgraded = false;
       Arrays.sort(winnings);
       return winnings;
    }
-   public part ClaimRole(){//gives game the role player wants
-      Scanner read = new Scanner(System.in);
+   public part ClaimRole(Player player){//gives game the role player wants
+      Object[] playerOptions;
       part[] optionsB = currentposition.returnParts();
       part[] optionsS = currentposition.returnScene().GiveParts();
-      part[] optionslist = new part[8];
-      int optionsIndex = 0;
-      System.out.println("These are the roles available:");
+      String[] optionslist = new String[8];
+      part[] optionsparts = new part[8];
+      int optionsIndex = 1;
+      int index = 0;
       for(int i = 0; i < 4; i++){
-         if(optionsB[i] != null  && optionsB[i].ReturnTaken() == false){
-            optionslist[optionsIndex] = optionsB[i];
-            System.out.println(""+optionsIndex+". "+optionslist[optionsIndex].ReturnName()+" level: "+optionslist[optionsIndex].ReturnLevel());
+         if(optionsB[i] != null  && optionsB[i].ReturnTaken() == false && Game.CheckRank(player, optionsB[i])){
+            optionsparts[i] = optionsB[i];
+            optionslist[index] = optionsB[i].ReturnName();
+            index++;
             optionsIndex ++;
          }
       }
       for(int i = 0; i < 3; i++){
-         if(optionsS[i] != null && optionsS[i].ReturnTaken() == false){
-            optionslist[optionsIndex] = optionsS[i];
-            System.out.println(""+optionsIndex+". "+optionslist[optionsIndex].ReturnName()+" level: "+optionslist[optionsIndex].ReturnLevel());
+         if(optionsS[i] != null && optionsS[i].ReturnTaken() == false && Game.CheckRank(player, optionsS[i])){
+            optionsparts[i+4] = optionsS[i];
+            optionslist[index] = optionsS[i].ReturnName();
+            index++;
             optionsIndex ++;
          }
       }
-      System.out.println(optionsIndex+". Do not claim a role");
-      System.out.println("input the number of the role you want");
-      int role = read.nextInt();
-      read.nextLine();
-      if(role == optionsIndex){
-         System.out.println("Canceling role claim...");
+      String[] optionslist2 = new String[optionsIndex];
+      for(int i = 0; i < optionsIndex - 1; i++){
+         optionslist2[i] = optionslist[i];
+      }
+      optionslist2[optionsIndex-1] = "exit";
+      playerOptions = optionslist2;
+      String rolestring = (String)JOptionPane.showInputDialog(Game.deadwood, "","Choose a Role",JOptionPane.PLAIN_MESSAGE,null,playerOptions,playerOptions[0]);
+      if(rolestring.equals("exit")){
          return null;
       }
-      return optionslist[role];
+      part role;
+      int slot = 10;
+      for(int i = 0; i < 8; i ++){
+         if(optionsparts[i] != null && rolestring.equals(optionsparts[i].ReturnName())){
+            slot = i;
+         }
+      }
+      if(slot == 10){
+         System.out.println("ERROR: in Player.ClaimRole");
+      }
+      role = optionsparts[slot];
+      return role;
    }
    //adjust variables of player
    public void AddMoney(int payout){
@@ -1127,58 +1143,63 @@ public int[] returnShotArea(){
 }
 class GUI extends JFrame{
 JButton move = new JButton("Move");
-JButton claimRole = new JButton("Claim");
+JButton claimRole = new JButton("Claim Role");
 JButton Act = new JButton("Act");
 JButton Reherse = new JButton("Reherse");      
 JButton upgrade = new JButton("Upgrade");
 JButton endTurn = new JButton("End Turn");
 JLabel Board;
 JLabel[] Card = new JLabel[10];
-JButton[] CardBacks = new JButton[10];
 JLabel[] pIcons = new JLabel[8];
 JLabel Menu;
-JLayeredPane Game;
+JLayeredPane Format;
 public void build(){
    //creating the frame and board
    setTitle("DEADWOOD");
    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-   Game = getLayeredPane();
+   Format = getLayeredPane();
    ImageIcon iconB = new ImageIcon("board.jpg");
    Board = new JLabel();
    Board.setIcon(iconB);
    Board.setBounds(0,0,iconB.getIconWidth(),iconB.getIconHeight());
    setSize(iconB.getIconWidth(),iconB.getIconHeight()+100);
-   Game.add(Board,new Integer(0));
+   Format.add(Board,new Integer(0));
    //adding the menu label and buttons
    Menu = new JLabel("MENU");
    Menu.setBounds(0,iconB.getIconHeight()+20,100,20);
-   Game.add(Menu, new Integer(2));
+   Format.add(Menu, new Integer(2));
    move.setActionCommand("move");
-   move.setBounds(20,iconB.getIconHeight()+40,100,20);
+   move.setBounds(20,iconB.getIconHeight()+40,110,20);
    claimRole.setActionCommand("claimRole");
-   claimRole.setBounds(220,iconB.getIconHeight()+40,100,20);
+   claimRole.setBounds(220,iconB.getIconHeight()+40,110,20);
    Act.setActionCommand("Act");
-   Act.setBounds(420,iconB.getIconHeight()+40,100,20);
+   Act.setBounds(420,iconB.getIconHeight()+40,110,20);
    Reherse.setActionCommand("Reherse");
-   Reherse.setBounds(620,iconB.getIconHeight()+40,100,20);
+   Reherse.setBounds(620,iconB.getIconHeight()+40,110,20);
    upgrade.setActionCommand("upgrade");
-   upgrade.setBounds(820,iconB.getIconHeight()+40,100,20);
+   upgrade.setBounds(820,iconB.getIconHeight()+40,110,20);
    endTurn.setActionCommand("endturn");
-   endTurn.setBounds(1020,iconB.getIconHeight()+40,100,20);
+   endTurn.setBounds(1020,iconB.getIconHeight()+40,110,20);
    move.addActionListener(new Actions());
    claimRole.addActionListener(new Actions());
    Act.addActionListener(new Actions());
    Reherse.addActionListener(new Actions());
    upgrade.addActionListener(new Actions());
    endTurn.addActionListener(new Actions());
-   Game.add(move, new Integer(2));
-   Game.add(claimRole, new Integer(2));
-   Game.add(Act, new Integer(2));
-   Game.add(Reherse, new Integer(2));
-   Game.add(upgrade, new Integer(2));
-   Game.add(endTurn, new Integer(2));
+   Format.add(move, new Integer(2));
+   Format.add(claimRole, new Integer(2));
+   Format.add(Act, new Integer(2));
+   Format.add(Reherse, new Integer(2));
+   Format.add(upgrade, new Integer(2));
+   Format.add(endTurn, new Integer(2));
+   //adding the first card
+   Card[0] = new JLabel();
+   ImageIcon cIcon =  new ImageIcon("01.png");
+   Card[0].setIcon(cIcon); 
+   Card[0].setBounds(20,65,cIcon.getIconWidth()+2,cIcon.getIconHeight());
+   Card[0].setOpaque(true);
    // Add the card to the lower layer
-   Game.add(Card[0], new Integer(1));
+   Format.add(Card[0], new Integer(1));
    ImageIcon playerIcon;
    for (int u = 0; u < 8; u++){ 
       pIcons[u] = new JLabel();
@@ -1209,33 +1230,49 @@ public void build(){
       pIcons[u].setIcon(playerIcon);
       pIcons[u].setBounds(991,275 + (u*10),playerIcon.getIconWidth(),playerIcon.getIconHeight());
       pIcons[u].setVisible(false);
-      Game.add(pIcons[u], new Integer(3));
+      Format.add(pIcons[u], new Integer(3));
    }
-  }
-  addCards(set[] setup){
-      for(int s = 0; s < 10; s++){
-         setup[s].
-         Card[s] = new JLabel();
-         ImageIcon cIcon =  new ImageIcon("");
-         Card[s].setIcon(cIcon); 
-         Card[s].setBounds(20,65,cIcon.getIconWidth()+2,cIcon.getIconHeight());
-         //Card[s].setOpaque(true);
-      }
   }
 }
 class Actions implements ActionListener{
    public void actionPerformed(ActionEvent e){
       if("move".equals(e.getActionCommand())){
+         Game.Move(Game.PlayerList[Game.tracker]);
          System.out.print("moving...\n");
       }
       if("claimRole".equals(e.getActionCommand())){
+         Game.ClaimingRole(Game.PlayerList[Game.tracker]);
          System.out.print("claiming role...\n");
       }
       if("Act".equals(e.getActionCommand())){
+         boolean SceneDone = Game.Act(Game.PlayerList[Game.tracker], Game.PlayerList[Game.tracker].Act(Game.PlayerList[Game.tracker].GiveTokens()));
+         boolean Bonus = false;
+         //boolean SceneDone = Act(PlayerList[tracker], PlayerList[tracker].Act(PlayerList[tracker].GiveTokens()));
+         if(SceneDone){
+            set CheckerSet = Game.PlayerList[Game.tracker].GivePosition();
+            Scenes CheckerCard = CheckerSet.returnScene();
+            part[] CheckerScene = CheckerCard.GiveParts();
+            for(int g = 0; g < 3; g++){
+               if(CheckerScene[g].ReturnTaken()){
+                  Bonus = true;
+               }
+            }
+            if(Bonus){
+               Game.BonusPayout(Game.PlayerList[Game.tracker], Game.PlayerList);
+            }
+            for(int c = 0; c < Game.TotalPlayers; c++){
+               if(Game.PlayerList[c].GivePosition() == Game.PlayerList[Game.tracker].GivePosition()){
+                  Game.PlayerList[c].GivePart().UpdateTaken();
+                  Game.PlayerList[c].ResetPart();
+               }
+            } 
+         }
+         Game.PlayerList[Game.tracker].resetMove();
          System.out.print("Acting...\n");
       }
-      if("Reherse".equals(e.getActionCommand())){
-         System.out.print("Rehersing...\n");
+      if("Rehearse".equals(e.getActionCommand())){
+         Game.PlayerList[Game.tracker].Rehearse();
+         System.out.print("Rehearsing...\n");
       }
       if("upgrade".equals(e.getActionCommand())){
          System.out.print("upgrading...\n");
