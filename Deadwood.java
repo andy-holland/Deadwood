@@ -31,7 +31,7 @@ static set[] SetList = new set[12];
 static int SceneCardTotal;
 static int DaysLeft = 4;
 static int TotalPlayers;
-static boolean EndTurn = false;
+static boolean endturn = false;
 public void play(){
    //get total number of players
    boolean EndTurn = false;
@@ -98,7 +98,6 @@ public void play(){
 		while(DaysLeft > 0){
          //change to a dialog message
 			//System.out.println(PlayerList[tracker].GiveName()+": it is your turn");
-			boolean endturn = false;
 			while(endturn == false){
             /*while(input.equals("")){
             }
@@ -151,6 +150,7 @@ public void play(){
                PlayerList[tracker].resetMove();
 				}*/
 			}
+         endturn = true;
          tracker ++;
          if(tracker == TotalPlayers){
             tracker = 0;
@@ -236,7 +236,7 @@ public void play(){
                JLabel flip = SetList[j].returnCard();
                ImageIcon faceUp = new ImageIcon(current.GiveImage());
                flip.setIcon(faceUp);
-            }
+            }  
             break;
          }
       }
@@ -295,140 +295,184 @@ public void play(){
    return office;
    }
    //Check which upgrade player wants and update player
-   public static void Upgrade(Player player){
+   public static int Upgrade(Player player){
       int input;
-      int newRank;
+      int newRank = 0;
       Scanner read = new Scanner(System.in);
       int money = player.GiveMoney();
       int credits = player.GiveCredits();
       int rank = player.GiveRank();
-      System.out.println("Current rank: "+rank);
-      System.out.println("Upgrades:");
-      System.out.println("Rank 2: 4 dollars or 5 credits");
-      System.out.println("Rank 3: 10 dollars or 10 credits");
-      System.out.println("Rank 4: 18 dollars or 15 credits");
-      System.out.println("Rank 5: 28 dollars or 20 credits");
-      System.out.println("Rank 6: 40 dollars or 25 credits");
-      System.out.println("input the number rank that you want");
-      newRank = read.nextInt();
+      Object[] options = new Object[6];
+      String[] s  = new String[6];
+      s[0] =("Rank 2: 4 dollars or 5 credits");
+      s[1] =("Rank 3: 10 dollars or 10 credits");
+      s[2] =("Rank 4: 18 dollars or 15 credits");
+      s[3] =("Rank 5: 28 dollars or 20 credits");
+      s[4] =("Rank 6: 40 dollars or 25 credits");
+      s[5] =("Exit");
+      for(int i = 0; i < 6; i++){
+         options[i] = s[i];
+      }
+      String selection = (String)JOptionPane.showInputDialog(deadwood, "Current rank: "+rank,"Upgrades:",JOptionPane.PLAIN_MESSAGE,null,options,options[0]);
+      if(selection.equals("Rank 2: 4 dollars or 5 credits")){
+         newRank = 2;
+      }
+      if(selection.equals("Rank 3: 10 dollars or 10 credits")){
+         newRank = 3;
+      }
+      if(selection.equals("Rank 4: 18 dollars or 15 credits")){
+         newRank = 4;
+      }
+      if(selection.equals("Rank 5: 28 dollars or 20 credits")){
+         newRank = 5;
+      }
+      if(selection.equals("Rank 6: 40 dollars or 25 credits")){
+         newRank = 6;
+      }
+      if(selection.equals("Exit")){
+         return 0;
+      }
       while(rank > newRank){
-         System.out.println("you cannot choose a rank lower than your current rank");
-         newRank = read.nextInt();
+         JOptionPane.showMessageDialog(deadwood,"you cannot choose a rank lower than your current rank");
+         Upgrade(player);
+         return 1;
       }
-      System.out.println("press 1 to pay with money, press 2 to pay with credits, press 3 to exit upgrade");
-      input = read.nextInt();
-      while(input < 3){
-         if(newRank == 2){
-            if(input == 1){
-               if(money - 4 < 0){
-                  System.out.println("you cannot afford this upgrade with money, switch to credits or quit");
-                  input = read.nextInt();
-               }
-               else{
-                  player.AddMoney(-4);
-                  player.UpdateRank(2);
-               }
+      Object[] moneyorcredits = new Object[3];
+      moneyorcredits[0] = "Pay with money";
+      moneyorcredits[1] = "Pay with credits";
+      moneyorcredits[2] = "Exit";
+      selection = (String)JOptionPane.showInputDialog(deadwood, "","Pay with money or credits?",JOptionPane.PLAIN_MESSAGE,null,moneyorcredits,moneyorcredits[0]);
+      input = 0;
+      if(selection.equals("Pay with money")){
+         input = 1;
+      }
+      if(selection.equals("Pay with credits")){
+         input = 2;
+      }
+      if(selection.equals("Exit")){
+         return 0;
+      }
+      if(newRank == 2){
+         if(input == 1){
+            if(money - 4 < 0){
+               JOptionPane.showMessageDialog(deadwood,"You cannot afford this");
+               Upgrade(player);
+               return 1;
             }
             else{
-               if(credits - 5 < 0){
-                  System.out.println("you cannot afford this upgrade with credits, switch to money or quit");
-                  input = read.nextInt();
-               }
-               else{
-                  player.AddCredits(-5);
-                  player.UpdateRank(2);
-               }
+               player.AddMoney(-4);
+               player.UpdateRank(2);
             }
          }
-         else if(newRank == 3){
-            if(input == 1){
-               if(money - 10 < 0){
-                  System.out.println("you cannot afford this upgrade with money, switch to credits or quit");
-                  input = read.nextInt();
-               }
-               else{
-                  player.AddMoney(-10);
-                  player.UpdateRank(3);
-               }
+         else{
+            if(credits - 5 < 0){
+               JOptionPane.showMessageDialog(deadwood,"You cannot afford this");
+               Upgrade(player);
+               return 1;
             }
             else{
-               if(credits - 10 < 0){
-                  System.out.println("you cannot afford this upgrade with credits, switch to money or quit");
-                  input = read.nextInt();
-               }
-               else{
-                  player.AddCredits(-10);
-                  player.UpdateRank(3);
-               }
-            }
-         }
-         else if(newRank == 4){
-            if(input == 1){
-               if(money - 18 < 0){
-                  System.out.println("you cannot afford this upgrade with money, switch to credits or quit");
-                  input = read.nextInt();
-               }
-               else{
-                  player.AddMoney(-18);
-                  player.UpdateRank(4);
-               }
-            }
-            else{
-               if(credits - 15 < 0){
-                  System.out.println("you cannot afford this upgrade with credits, switch to money or quit");
-                  input = read.nextInt();
-               }
-               else{
-                  player.AddCredits(-15);
-                  player.UpdateRank(4);
-               }
-            }
-         }
-         else if(newRank == 5){
-            if(input == 1){
-               if(money - 28 < 0){
-                  System.out.println("you cannot afford this upgrade with money, switch to credits or quit");
-                  input = read.nextInt();
-               }
-               else{
-                  player.AddMoney(-28);
-                  player.UpdateRank(5);
-               }
-            }
-            else{
-               if(credits - 20 < 0){
-                  System.out.println("you cannot afford this upgrade with credits, switch to money or quit");
-                  input = read.nextInt();
-               }
-               else{
-                  player.AddCredits(-20);
-                  player.UpdateRank(5);
-               }
-            }
-         }
-         else if(newRank == 6){
-            if(input == 1){
-               if(money - 40 < 0){
-                  System.out.println("you cannot afford this upgrade with money, switch to credits or quit");
-                  input = read.nextInt();
-               }
-               else{
-                  player.AddMoney(-40);
-                  player.UpdateRank(6);
-               }
-            }
-            else{
-               if(credits - 25 < 0){
-                  System.out.println("you cannot afford this upgrade with credits, switch to money or quit");
-                  input = read.nextInt();
-               }
-               else{
-                  player.AddCredits(-25);
-                  player.UpdateRank(6);
-               }
+               player.AddCredits(-5);
+               player.UpdateRank(2);
             }
          }
       }
+      else if(newRank == 3){
+         if(input == 1){
+            if(money - 10 < 0){
+               JOptionPane.showMessageDialog(deadwood,"You cannot afford this");
+               Upgrade(player);
+               return 1;
+            }
+            else{
+               player.AddMoney(-10);
+               player.UpdateRank(3);
+            }
+         }
+         else{
+            if(credits - 10 < 0){
+               JOptionPane.showMessageDialog(deadwood,"You cannot afford this");
+               Upgrade(player);
+               return 1;
+            }
+            else{
+               player.AddCredits(-10);
+               player.UpdateRank(3);
+            }
+         }
+      }
+      else if(newRank == 4){
+         if(input == 1){
+            if(money - 18 < 0){
+               JOptionPane.showMessageDialog(deadwood,"You cannot afford this");
+               Upgrade(player);
+               return 1;
+            }
+            else{
+               player.AddMoney(-18);
+               player.UpdateRank(4);
+            }
+         }
+         else{
+            if(credits - 15 < 0){
+               JOptionPane.showMessageDialog(deadwood,"You cannot afford this");
+               Upgrade(player);
+               return 1;
+            }
+            else{
+               player.AddCredits(-15);
+               player.UpdateRank(4);
+            }
+         }
+      }
+      else if(newRank == 5){
+         if(input == 1){
+            if(money - 28 < 0){
+               JOptionPane.showMessageDialog(deadwood,"You cannot afford this");
+               Upgrade(player);
+               return 1;
+            }
+            else{
+               player.AddMoney(-28);
+               player.UpdateRank(5);
+            }
+         }
+         else{
+            if(credits - 20 < 0){
+               JOptionPane.showMessageDialog(deadwood,"You cannot afford this");
+               Upgrade(player);
+               return 1;
+            }
+            else{
+               player.AddCredits(-20);
+               player.UpdateRank(5);
+            }
+         }
+      }
+      else if(newRank == 6){
+         if(input == 1){
+            if(money - 40 < 0){
+               JOptionPane.showMessageDialog(deadwood,"You cannot afford this");
+               Upgrade(player);
+               return 1;
+            }
+            else{
+               player.AddMoney(-40);
+               player.UpdateRank(6);
+            }
+         }
+         else{
+            if(credits - 25 < 0){
+               JOptionPane.showMessageDialog(deadwood,"You cannot afford this");
+               Upgrade(player);
+               return 1;
+            }
+            else{
+               player.AddCredits(-25);
+               player.UpdateRank(6);
+            }
+         }
+      }
+      return 1;
    }
    //give money or credits to player
    public static void Payout(Player player){
@@ -1054,11 +1098,11 @@ public void UpdateCord(int x, int y, int h, int w){
 public void UpdateTaken(){
    if(partTaken == true){
       partTaken = false;
-      }
+   }
    else{
       partTaken = true;
-      }
    }
+}
 //returning data
 public String ReturnName(){
    return partName;   
@@ -1082,7 +1126,7 @@ public boolean ReturnTaken(){
    }
 public boolean ReturnOnCard(){
    return OnCard;
-   }
+}
 }
 //data for single sets
 class set{
@@ -1161,13 +1205,13 @@ public int[] returnShotArea(){
    }
 public JLabel returnCard(){
    return Card;   
-   }
+}
 }
 class GUI extends JFrame{
 JButton move = new JButton("Move");
 JButton claimRole = new JButton("Claim Role");
 JButton Act = new JButton("Act");
-JButton Reherse = new JButton("Reherse");      
+JButton Rehearse = new JButton("Rehearse");      
 JButton upgrade = new JButton("Upgrade");
 JButton endTurn = new JButton("End Turn");
 JLabel Board;
@@ -1175,6 +1219,13 @@ JLabel[] Card = new JLabel[10];
 JLabel[] pIcons = new JLabel[8];
 JLabel Menu;
 JLayeredPane Format;
+JLabel info;
+JLabel playername;
+JLabel money;
+JLabel credits;
+JLabel tokens;
+JLabel rank;
+JLabel role;
 public void build(){
    //creating the frame and board
    setTitle("DEADWOOD");
@@ -1184,8 +1235,30 @@ public void build(){
    Board = new JLabel();
    Board.setIcon(iconB);
    Board.setBounds(0,0,iconB.getIconWidth(),iconB.getIconHeight());
-   setSize(iconB.getIconWidth(),iconB.getIconHeight()+100);
+   setSize(iconB.getIconWidth()+150,iconB.getIconHeight()+100);
    Format.add(Board,new Integer(0));
+   //adding player info (money, tokens, credits)
+   info = new JLabel("PLAYER INFO");
+   info.setBounds(iconB.getIconWidth(),0,100,15);
+   Format.add(info, new Integer(2));
+      playername = new JLabel("Player:  ");
+   playername.setBounds(iconB.getIconWidth(),20,100,15);
+   Format.add(playername, new Integer(2));
+      money = new JLabel("Money:  ");
+   money.setBounds(iconB.getIconWidth(),20,100,45);
+   Format.add(money, new Integer(2));
+      credits = new JLabel("Credits:  ");
+   credits.setBounds(iconB.getIconWidth(),20,100,75);
+   Format.add(credits, new Integer(2));
+      tokens = new JLabel("Tokens:  ");
+   tokens.setBounds(iconB.getIconWidth(),20,100,105);
+   Format.add(tokens, new Integer(2));
+      rank = new JLabel("Rank:  ");
+   rank.setBounds(iconB.getIconWidth(),20,100,135);
+   Format.add(rank, new Integer(2));
+      role = new JLabel("Role:  ");
+   role.setBounds(iconB.getIconWidth(),20,100,165);
+   Format.add(role, new Integer(2));
    //adding the menu label and buttons
    Menu = new JLabel("MENU");
    Menu.setBounds(0,iconB.getIconHeight()+20,100,20);
@@ -1196,8 +1269,8 @@ public void build(){
    claimRole.setBounds(220,iconB.getIconHeight()+40,110,20);
    Act.setActionCommand("Act");
    Act.setBounds(420,iconB.getIconHeight()+40,110,20);
-   Reherse.setActionCommand("Reherse");
-   Reherse.setBounds(620,iconB.getIconHeight()+40,110,20);
+   Rehearse.setActionCommand("Rehearse");
+   Rehearse.setBounds(620,iconB.getIconHeight()+40,110,20);
    upgrade.setActionCommand("upgrade");
    upgrade.setBounds(820,iconB.getIconHeight()+40,110,20);
    endTurn.setActionCommand("endturn");
@@ -1205,13 +1278,13 @@ public void build(){
    move.addActionListener(new Actions());
    claimRole.addActionListener(new Actions());
    Act.addActionListener(new Actions());
-   Reherse.addActionListener(new Actions());
+   Rehearse.addActionListener(new Actions());
    upgrade.addActionListener(new Actions());
    endTurn.addActionListener(new Actions());
    Format.add(move, new Integer(2));
    Format.add(claimRole, new Integer(2));
    Format.add(Act, new Integer(2));
-   Format.add(Reherse, new Integer(2));
+   Format.add(Rehearse, new Integer(2));
    Format.add(upgrade, new Integer(2));
    Format.add(endTurn, new Integer(2));
    ImageIcon playerIcon;
@@ -1256,7 +1329,7 @@ public void build(){
       Card[u].setIcon(cIcon); 
       Card[u].setBounds(cords[0],cords[1],cIcon.getIconWidth()+2,cIcon.getIconHeight());
       Card[u].setOpaque(true);
-      // Add the card to the lower layer and set
+      // Add the card to the lower layer
       location[u].UpdateImage(Card[u]);
       Format.add(Card[u], new Integer(1));
    } 
@@ -1264,8 +1337,9 @@ public void build(){
   public void MovePlayerIcon(Player player, set NewLoc){
    int[] Icord = NewLoc.returnArea();
    JLabel mover = player.GiveIcon();
-   mover.setBounds(Icord[0]+((player.PlayerNum-1) * 10), Icord[1]+115, mover.getIcon().getIconWidth(), mover.getIcon().getIconHeight());
-  }
+   mover.setBounds(Icord[0]+((player.PlayerNum-1) * 10), Icord[1]+115, mover.getIcon().getIconWidth(), mover.getIcon().getIconHeight());  
+   }
+
   public void PlayerRole(Player player, part Role){
    int[] partCord = Role.ReturnCord();
    JLabel claim = player.GiveIcon();
@@ -1276,7 +1350,7 @@ public void build(){
    else{
       claim.setBounds(partCord[0], partCord[1],claim.getIcon().getIconWidth(), claim.getIcon().getIconHeight());
    }
-  }
+   }
 }
 class Actions implements ActionListener{
    public void actionPerformed(ActionEvent e){
@@ -1284,11 +1358,11 @@ class Actions implements ActionListener{
          Game.Move(Game.PlayerList[Game.tracker]);
          System.out.print("moving...\n");
       }
-      else if("claimRole".equals(e.getActionCommand())){
+      if("claimRole".equals(e.getActionCommand())){
          Game.ClaimingRole(Game.PlayerList[Game.tracker]);
          System.out.print("claiming role...\n");
       }
-      else if("Act".equals(e.getActionCommand())){
+      if("Act".equals(e.getActionCommand())){
          boolean SceneDone = Game.Act(Game.PlayerList[Game.tracker], Game.PlayerList[Game.tracker].Act(Game.PlayerList[Game.tracker].GiveTokens()));
          boolean Bonus = false;
          //boolean SceneDone = Act(PlayerList[tracker], PlayerList[tracker].Act(PlayerList[tracker].GiveTokens()));
@@ -1314,14 +1388,17 @@ class Actions implements ActionListener{
          Game.PlayerList[Game.tracker].resetMove();
          System.out.print("Acting...\n");
       }
-      else if("Rehearse".equals(e.getActionCommand())){
+      if("Rehearse".equals(e.getActionCommand())){
          Game.PlayerList[Game.tracker].Rehearse();
+         Game.PlayerList[Game.tracker].resetMove();
          System.out.print("Rehearsing...\n");
       }
-      else if("upgrade".equals(e.getActionCommand())){
+      if("upgrade".equals(e.getActionCommand())){
+         Game.Upgrade(Game.PlayerList[Game.tracker]);
          System.out.print("upgrading...\n");
       }
-      else if("endturn".equals(e.getActionCommand())){
+      if("endturn".equals(e.getActionCommand())){
+         Game.endturn = true;
          System.out.print("ending turn...\n");
       }
      }
