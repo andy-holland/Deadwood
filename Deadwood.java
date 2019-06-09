@@ -53,8 +53,8 @@ public void play(){
    //create the frame for the game with the current boardstate
    SetupCards();
    DistrCards();
-
    deadwood.build();
+   deadwood.CardBuild(SetList);
    deadwood.setVisible(true);
    Object[] playerOptions = {2,3,4,5,6,7,8};
    TotalPlayers = (int)JOptionPane.showInputDialog(deadwood, "How many players?","Before we start...",JOptionPane.PLAIN_MESSAGE,null,playerOptions,playerOptions[0]);
@@ -66,6 +66,7 @@ public void play(){
       if(Initial != null){
          PlayerList[p] = Initial;
          PlayerList[p].UpdateLoc(SetList[10]);
+         PlayerList[p].UpdateIcon(deadwood.pIcons[p]);
          deadwood.pIcons[p].setVisible(true);
       }
       //name players
@@ -107,7 +108,6 @@ public void play(){
                //move needs to check to revel the card on the current set
                //and update the player location
 				}
-
 				else if(input == "upgrade"){
 				   Upgrade(PlayerList[tracker]);
                //could have current rank displayed on 
@@ -117,17 +117,14 @@ public void play(){
                PlayerList[tracker].resetMove();
 					endturn = true;
 				}
-
 				else if(input == "claim role"){
                ClaimingRole(PlayerList[tracker]);
 					endturn = true;
 				}
-
 				else if(input == "end turn"){
 					endturn = true;
                PlayerList[tracker].resetMove();
 				}
-
 				else if(input == "act"){
                boolean Bonus = false;
                boolean SceneDone = Act(PlayerList[tracker], PlayerList[tracker].Act(PlayerList[tracker].GiveTokens()));
@@ -232,6 +229,9 @@ public void play(){
       for(int j = 0; j < 12; j++){
          if(SetList[j].returnName().equals(selection)){
             player.UpdateLoc(SetList[j]);
+            deadwood.MovePlayerIcon(player, SetList[j]);
+            
+            break;
          }
       }
    }
@@ -500,6 +500,7 @@ private int money = 0;
 private int credits = 0;
 private boolean hasmoved = false;
 private boolean hasUpgraded = false;
+private JLabel playerIcon;
    //constructor
    private Player(){
       instance += 1;
@@ -528,6 +529,12 @@ private boolean hasUpgraded = false;
    }
    public void UpdateRank(int newRank){
       rank = newRank;
+   }
+   public void UpdateIcon(JLabel icon){
+      playerIcon = icon;
+   }
+   public JLabel GiveIcon(){
+      return playerIcon;
    }
    public String GiveName(){
       return PlayerName;
@@ -1192,14 +1199,6 @@ public void build(){
    Format.add(Reherse, new Integer(2));
    Format.add(upgrade, new Integer(2));
    Format.add(endTurn, new Integer(2));
-   //adding the first card
-   Card[0] = new JLabel();
-   ImageIcon cIcon =  new ImageIcon("01.png");
-   Card[0].setIcon(cIcon); 
-   Card[0].setBounds(20,65,cIcon.getIconWidth()+2,cIcon.getIconHeight());
-   Card[0].setOpaque(true);
-   // Add the card to the lower layer
-   Format.add(Card[0], new Integer(1));
    ImageIcon playerIcon;
    for (int u = 0; u < 8; u++){ 
       pIcons[u] = new JLabel();
@@ -1232,6 +1231,24 @@ public void build(){
       pIcons[u].setVisible(false);
       Format.add(pIcons[u], new Integer(3));
    }
+  }
+  public void CardBuild(set[] location){
+   //adding the first card
+   for(int u = 0; u < 10; u++){
+      Card[u] = new JLabel();
+      int[] cords = location[u].returnArea();
+      ImageIcon cIcon =  new ImageIcon("CardBack.jpg");
+      Card[u].setIcon(cIcon); 
+      Card[u].setBounds(cords[0],cords[1],cIcon.getIconWidth()+2,cIcon.getIconHeight());
+      Card[u].setOpaque(true);
+      // Add the card to the lower layer
+      Format.add(Card[u], new Integer(1));
+   } 
+  }
+  public void MovePlayerIcon(Player player, set NewLoc){
+   int[] Icord = NewLoc.returnArea();
+   JLabel mover = player.GiveIcon();
+   mover.setBounds(Icord[0], Icord[1]+((player.PlayerNum-1) * 10), mover.getIcon().getIconWidth(), mover.getIcon().getIconHeight());
   }
 }
 class Actions implements ActionListener{
