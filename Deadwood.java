@@ -230,7 +230,13 @@ public void play(){
          if(SetList[j].returnName().equals(selection)){
             player.UpdateLoc(SetList[j]);
             deadwood.MovePlayerIcon(player, SetList[j]);
-            
+            Scenes current = SetList[j].returnScene();
+            if(j < 10 && current.flipped == false){
+               current.flipped = true;
+               JLabel flip = SetList[j].returnCard();
+               ImageIcon faceUp = new ImageIcon(current.GiveImage());
+               flip.setIcon(faceUp);
+            }
             break;
          }
       }
@@ -244,6 +250,7 @@ public void play(){
       }
       Role.UpdateTaken();
       player.UpdateRole(Role);
+      deadwood.PlayerRole(player, Role);
       /*if(CheckRank(player, Role)){
          Role.UpdateTaken();
          player.UpdateRole(Role);
@@ -918,6 +925,7 @@ private int budget;
 private int sceneNum;
 private part[] partList = new part[3];
 private int partIndex = 0;
+public boolean flipped = false;
 //methods to return vairables of scenes
    public int GiveBudget(){
       return budget;
@@ -1046,11 +1054,11 @@ public void UpdateCord(int x, int y, int h, int w){
 public void UpdateTaken(){
    if(partTaken == true){
       partTaken = false;
-   }
+      }
    else{
       partTaken = true;
+      }
    }
-}
 //returning data
 public String ReturnName(){
    return partName;   
@@ -1074,7 +1082,7 @@ public boolean ReturnTaken(){
    }
 public boolean ReturnOnCard(){
    return OnCard;
-}
+   }
 }
 //data for single sets
 class set{
@@ -1088,10 +1096,14 @@ private int[][] shots = new int[3][4];
 private int shotIndex;
 private Scenes SceneCard = new Scenes();
 private int shotsleft = -1;
+private JLabel Card;
 //update data
 public void UpdateName(String Name){
    setName = Name;
    }
+public void UpdateImage(JLabel card){
+   Card = card;
+}
 public void AddNeighbor(String neighbor){
    neighbors[neighborIndex] = neighbor;
    neighborIndex ++; 
@@ -1146,6 +1158,9 @@ public Scenes returnScene(){
    }
 public int[] returnShotArea(){
    return shots[shotIndex-1];
+   }
+public JLabel returnCard(){
+   return Card;   
    }
 }
 class GUI extends JFrame{
@@ -1241,14 +1256,26 @@ public void build(){
       Card[u].setIcon(cIcon); 
       Card[u].setBounds(cords[0],cords[1],cIcon.getIconWidth()+2,cIcon.getIconHeight());
       Card[u].setOpaque(true);
-      // Add the card to the lower layer
+      // Add the card to the lower layer and set
+      location[u].UpdateImage(Card[u]);
       Format.add(Card[u], new Integer(1));
    } 
   }
   public void MovePlayerIcon(Player player, set NewLoc){
    int[] Icord = NewLoc.returnArea();
    JLabel mover = player.GiveIcon();
-   mover.setBounds(Icord[0], Icord[1]+((player.PlayerNum-1) * 10), mover.getIcon().getIconWidth(), mover.getIcon().getIconHeight());
+   mover.setBounds(Icord[0]+((player.PlayerNum-1) * 10), Icord[1]+115, mover.getIcon().getIconWidth(), mover.getIcon().getIconHeight());
+  }
+  public void PlayerRole(Player player, part Role){
+   int[] partCord = Role.ReturnCord();
+   JLabel claim = player.GiveIcon();
+   if(Role.ReturnOnCard()){
+      int[] setCord = player.GivePosition().returnArea();
+      claim.setBounds(setCord[0] + partCord[0],setCord[1] + partCord[1] , claim.getIcon().getIconWidth(), claim.getIcon().getIconHeight());
+   }
+   else{
+      claim.setBounds(partCord[0], partCord[1],claim.getIcon().getIconWidth(), claim.getIcon().getIconHeight());
+   }
   }
 }
 class Actions implements ActionListener{
@@ -1257,11 +1284,11 @@ class Actions implements ActionListener{
          Game.Move(Game.PlayerList[Game.tracker]);
          System.out.print("moving...\n");
       }
-      if("claimRole".equals(e.getActionCommand())){
+      else if("claimRole".equals(e.getActionCommand())){
          Game.ClaimingRole(Game.PlayerList[Game.tracker]);
          System.out.print("claiming role...\n");
       }
-      if("Act".equals(e.getActionCommand())){
+      else if("Act".equals(e.getActionCommand())){
          boolean SceneDone = Game.Act(Game.PlayerList[Game.tracker], Game.PlayerList[Game.tracker].Act(Game.PlayerList[Game.tracker].GiveTokens()));
          boolean Bonus = false;
          //boolean SceneDone = Act(PlayerList[tracker], PlayerList[tracker].Act(PlayerList[tracker].GiveTokens()));
@@ -1287,14 +1314,14 @@ class Actions implements ActionListener{
          Game.PlayerList[Game.tracker].resetMove();
          System.out.print("Acting...\n");
       }
-      if("Rehearse".equals(e.getActionCommand())){
+      else if("Rehearse".equals(e.getActionCommand())){
          Game.PlayerList[Game.tracker].Rehearse();
          System.out.print("Rehearsing...\n");
       }
-      if("upgrade".equals(e.getActionCommand())){
+      else if("upgrade".equals(e.getActionCommand())){
          System.out.print("upgrading...\n");
       }
-      if("endturn".equals(e.getActionCommand())){
+      else if("endturn".equals(e.getActionCommand())){
          System.out.print("ending turn...\n");
       }
      }
