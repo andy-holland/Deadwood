@@ -32,22 +32,10 @@ static int SceneCardTotal;
 static int DaysLeft = 4;
 static int TotalPlayers;
 static boolean endturn = false;
+static int player1 = 0;
 public void play(){
    //get total number of players
    boolean EndTurn = false;
-   /*
-   Scanner read = new Scanner(System.in);
-   System.out.println("Welcome to Deadwood!\n");
-   System.out.println("How many players are there? You can have 2-8\n");
-   TotalPlayers = read.nextInt();
-   while(TotalPlayers < 2 || TotalPlayers > 8){   
-      System.out.println("That is not a valid amount of players\n");
-      System.out.println("How many players are there? You can have 2-8\n");
-      TotalPlayers = read.nextInt();
-   }
-   System.out.println("Starting the game with "+TotalPlayers+" players\n");
-   read.nextLine();
-   */
    //create the board and populate sets with random cards
    SetList = SetupBoard();
    //create the frame for the game with the current boardstate
@@ -93,68 +81,32 @@ public void play(){
          PlayerList[i].UpdateRank(2);
       }
    }
-		
-      //loop until day ends
-		while(DaysLeft > 0){
-         //change to a dialog message
-			//System.out.println(PlayerList[tracker].GiveName()+": it is your turn");
-			while(endturn == false){
-            /*while(input.equals("")){
-            }
-				if(input == "move"){
-					Move(PlayerList[tracker]);
-               input = "";
-               //move needs to check to revel the card on the current set
-               //and update the player location
-				}
-				else if(input == "upgrade"){
-				   Upgrade(PlayerList[tracker]);
-               //could have current rank displayed on 
-				}
-				else if(input == "rehearse"){
-               PlayerList[tracker].Rehearse();
-               PlayerList[tracker].resetMove();
-					endturn = true;
-				}
-				else if(input == "claim role"){
-               ClaimingRole(PlayerList[tracker]);
-					endturn = true;
-				}
-				else if(input == "end turn"){
-					endturn = true;
-               PlayerList[tracker].resetMove();
-				}
-				else if(input == "act"){
-               boolean Bonus = false;
-               boolean SceneDone = Act(PlayerList[tracker], PlayerList[tracker].Act(PlayerList[tracker].GiveTokens()));
-               if(SceneDone){
-                  set CheckerSet = PlayerList[tracker].GivePosition();
-                  Scenes CheckerCard = CheckerSet.returnScene();
-                  part[] CheckerScene = CheckerCard.GiveParts();
-                  for(int g = 0; g < 3; g++){
-                     if(CheckerScene[g].ReturnTaken()){
-                        Bonus = true;
-                     }
-                  }
-                  if(Bonus){
-                     BonusPayout(PlayerList[tracker], PlayerList);
-                  }
-                  for(int c = 0; c < TotalPlayers; c++){
-                     if(PlayerList[c].GivePosition() == PlayerList[tracker].GivePosition()){
-                        PlayerList[c].GivePart().UpdateTaken();
-                        PlayerList[c].ResetPart();
-                     }
-                  } 
-               }
-				   endturn = true;
-               PlayerList[tracker].resetMove();
-				}*/
-			}
-         endturn = true;
+   turns();
+}
+
+public static void turns(){
+      if(tracker == 0 && player1 == 0){
+         player1 = 1;
+         JOptionPane.showMessageDialog(deadwood,"It is player " +(tracker+1)+ "'s turn");
+      }
+      if(DaysLeft == 0){
+         EndGame(PlayerList);
+      }	
+      if(endturn){
+         deadwood.move.setEnabled(false);
+         deadwood.claimRole.setEnabled(false);
+         deadwood.upgrade.setEnabled(false);
+         deadwood.Act.setEnabled(false);
+         deadwood.Rehearse.setEnabled(false);
+         deadwood.endTurn.setEnabled(false);
+         deadwood.startTurn.setEnabled(true);
+         endturn = false;
+         PlayerList[tracker].resetMove();
          tracker ++;
          if(tracker == TotalPlayers){
             tracker = 0;
          }
+         JOptionPane.showMessageDialog(deadwood,"It is player " +(tracker+1)+ "'s turn");
          int DaySetter = 0;
          for(int d = 0; d < 12; d++){
             if(SetList[d].returnShots() > 0){
@@ -164,10 +116,7 @@ public void play(){
          if(DaySetter == 1){
             ResetDay(PlayerList);
          }
-		}
-      EndGame(PlayerList);
-   //close scanner
-   //read.close();
+      }
    } 
 //populate board
    private static set[] SetupBoard(){
@@ -608,8 +557,20 @@ private JLabel playerIcon;
    public int GiveTokens(){
       return tokens;
    }
+   public boolean GiveMoved(){
+      return hasmoved;
+   }
+   public boolean GiveUpgraded(){
+      return hasUpgraded;
+   }
+   public void moved(){
+      hasmoved = true;
+   }
    public void resetMove(){
       hasmoved = false;
+   }
+   public void resetUpgraded(){
+      hasUpgraded = false;
    }
    //method to run current player's turn
    public String PlayerTurn(){
@@ -1214,6 +1175,7 @@ JButton Act = new JButton("Act");
 JButton Rehearse = new JButton("Rehearse");      
 JButton upgrade = new JButton("Upgrade");
 JButton endTurn = new JButton("End Turn");
+JButton startTurn = new JButton("Start Turn");
 JLabel Board;
 JLabel[] Card = new JLabel[10];
 JLabel[] pIcons = new JLabel[8];
@@ -1275,18 +1237,28 @@ public void build(){
    upgrade.setBounds(820,iconB.getIconHeight()+40,110,20);
    endTurn.setActionCommand("endturn");
    endTurn.setBounds(1020,iconB.getIconHeight()+40,110,20);
+   startTurn.setActionCommand("startturn");
+   startTurn.setBounds(1020,iconB.getIconHeight()+80,110,20);
    move.addActionListener(new Actions());
    claimRole.addActionListener(new Actions());
    Act.addActionListener(new Actions());
    Rehearse.addActionListener(new Actions());
    upgrade.addActionListener(new Actions());
    endTurn.addActionListener(new Actions());
+   startTurn.addActionListener(new Actions());
+   upgrade.setEnabled(false);
+   Rehearse.setEnabled(false);
+   move.setEnabled(false);
+   Act.setEnabled(false);
+   claimRole.setEnabled(false);
+   endTurn.setEnabled(false);
    Format.add(move, new Integer(2));
    Format.add(claimRole, new Integer(2));
    Format.add(Act, new Integer(2));
    Format.add(Rehearse, new Integer(2));
    Format.add(upgrade, new Integer(2));
    Format.add(endTurn, new Integer(2));
+   Format.add(startTurn, new Integer(2));
    ImageIcon playerIcon;
    for (int u = 0; u < 8; u++){ 
       pIcons[u] = new JLabel();
@@ -1353,16 +1325,56 @@ public void build(){
    }
 }
 class Actions implements ActionListener{
+   public void checkactions(){
+      Player player = Game.PlayerList[Game.tracker];
+      Game.deadwood.claimRole.setEnabled(true);
+      Game.deadwood.endTurn.setEnabled(true);
+      if(player.GivePosition() != Game.SetList[11]){
+         Game.deadwood.upgrade.setEnabled(false);
+      }
+      if(player.GivePosition() == Game.SetList[11] || player.GivePosition() == Game.SetList[10]){
+         Game.deadwood.claimRole.setEnabled(false);
+      }
+      if(player.GivePart().ReturnName() != null){
+         Game.deadwood.move.setEnabled(false);
+         Game.deadwood.claimRole.setEnabled(false);
+         Game.deadwood.upgrade.setEnabled(false);
+      }
+      else{
+         Game.deadwood.Act.setEnabled(false);
+         Game.deadwood.Rehearse.setEnabled(false);
+         if(player.GiveMoved()){
+            Game.deadwood.move.setEnabled(false);
+         }
+         if(player.GiveUpgraded()){
+            Game.deadwood.upgrade.setEnabled(false);
+         }
+      }
+   }
    public void actionPerformed(ActionEvent e){
-      if("move".equals(e.getActionCommand())){
+      if("startturn".equals(e.getActionCommand())){
+         Game.deadwood.move.setEnabled(true);
+         Game.deadwood.Act.setEnabled(true);
+         Game.deadwood.upgrade.setEnabled(true);
+         Game.deadwood.Rehearse.setEnabled(true);
+         checkactions();
+         Game.deadwood.startTurn.setEnabled(false);
+      }
+      else if("move".equals(e.getActionCommand())){
          Game.Move(Game.PlayerList[Game.tracker]);
+         Game.PlayerList[Game.tracker].moved();
+         checkactions();
          System.out.print("moving...\n");
+         Game.turns();
       }
-      if("claimRole".equals(e.getActionCommand())){
+      else if("claimRole".equals(e.getActionCommand())){
          Game.ClaimingRole(Game.PlayerList[Game.tracker]);
+         checkactions();
          System.out.print("claiming role...\n");
+         Game.endturn = true;
+         Game.turns();
       }
-      if("Act".equals(e.getActionCommand())){
+      else if("Act".equals(e.getActionCommand())){
          boolean SceneDone = Game.Act(Game.PlayerList[Game.tracker], Game.PlayerList[Game.tracker].Act(Game.PlayerList[Game.tracker].GiveTokens()));
          boolean Bonus = false;
          //boolean SceneDone = Act(PlayerList[tracker], PlayerList[tracker].Act(PlayerList[tracker].GiveTokens()));
@@ -1386,19 +1398,29 @@ class Actions implements ActionListener{
             } 
          }
          Game.PlayerList[Game.tracker].resetMove();
+         checkactions();
          System.out.print("Acting...\n");
+         Game.endturn = true;
+         Game.turns();
       }
-      if("Rehearse".equals(e.getActionCommand())){
+      else if("Rehearse".equals(e.getActionCommand())){
          Game.PlayerList[Game.tracker].Rehearse();
          Game.PlayerList[Game.tracker].resetMove();
-         System.out.print("Rehearsing...\n");
-      }
-      if("upgrade".equals(e.getActionCommand())){
-         Game.Upgrade(Game.PlayerList[Game.tracker]);
-         System.out.print("upgrading...\n");
-      }
-      if("endturn".equals(e.getActionCommand())){
+         checkactions();
          Game.endturn = true;
+         System.out.print("Rehearsing...\n");
+         Game.turns();
+      }
+      else if("upgrade".equals(e.getActionCommand())){
+         Game.Upgrade(Game.PlayerList[Game.tracker]);
+         checkactions();
+         System.out.print("upgrading...\n");
+         Game.turns();
+      }
+      else if("endturn".equals(e.getActionCommand())){
+         Game.endturn = true;
+         checkactions();
+         Game.turns();
          System.out.print("ending turn...\n");
       }
      }
