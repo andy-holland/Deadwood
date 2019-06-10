@@ -43,6 +43,7 @@ public void play(){
    DistrCards();
    deadwood.build();
    deadwood.CardBuild(SetList);
+   deadwood.CreateShots(SetList);
    deadwood.setVisible(true);
    Object[] playerOptions = {2,3,4,5,6,7,8};
    TotalPlayers = (int)JOptionPane.showInputDialog(deadwood, "How many players?","Before we start...",JOptionPane.PLAIN_MESSAGE,null,playerOptions,playerOptions[0]);
@@ -79,6 +80,7 @@ public void play(){
    if(TotalPlayers >= 7){
       for(int i = 0; i < TotalPlayers; i++){
          PlayerList[i].UpdateRank(2);
+         deadwood.UpgradePlayerIcon(PlayerList[i], 2);
       }
    }
    turns();
@@ -88,9 +90,6 @@ public static void turns(){
       if(tracker == 0 && player1 == 0){
          player1 = 1;
          JOptionPane.showMessageDialog(deadwood,"It is player " +(tracker+1)+ "'s turn");
-      }
-      if(DaysLeft == 0){
-         EndGame(PlayerList);
       }	
       if(endturn){
          deadwood.move.setEnabled(false);
@@ -106,9 +105,8 @@ public static void turns(){
          if(tracker == TotalPlayers){
             tracker = 0;
          }
-         JOptionPane.showMessageDialog(deadwood,"It is player " +(tracker+1)+ "'s turn");
          int DaySetter = 0;
-         for(int d = 0; d < 12; d++){
+         for(int d = 0; d < 10; d++){
             if(SetList[d].returnShots() > 0){
                DaySetter ++;
             }
@@ -116,6 +114,10 @@ public static void turns(){
          if(DaySetter == 1){
             ResetDay(PlayerList);
          }
+         if(DaysLeft == 0){
+            EndGame(PlayerList);
+         }
+         JOptionPane.showMessageDialog(deadwood,"It is player " +(tracker+1)+ "'s turn");
       }
    } 
 //populate board
@@ -159,8 +161,9 @@ public static void turns(){
       }
    }
    //check the preposed move and excecute
-   public static void Move(Player player){
+   public static boolean Move(Player player){
       boolean valid = false;
+      boolean exit = false;
       set currentSet = player.GivePosition();
       String[] arr = player.GivePosition().returnNeighbors();
       Object[] neighbors;
@@ -180,34 +183,32 @@ public static void turns(){
             player.UpdateLoc(SetList[j]);
             deadwood.MovePlayerIcon(player, SetList[j]);
             Scenes current = SetList[j].returnScene();
-            if(j < 10 && current.flipped == false){
+            if(j < 10 && current != null){
                current.flipped = true;
                JLabel flip = SetList[j].returnCard();
                ImageIcon faceUp = new ImageIcon(current.GiveImage());
                flip.setIcon(faceUp);
             }  
-            break;
+            return exit;
          }
       }
+      return !exit;
+      
    }
 //confirm the role player wants and update
-   public static void ClaimingRole(Player player){
+   public static boolean ClaimingRole(Player player){
       part Role = player.ClaimRole(player);
       //if player hit exit
       if(Role == null){
-         return;
+         if(player.GivePosition().returnScene() == null){
+            JOptionPane.showMessageDialog(deadwood,"This set does not have a scene");
+         }
+         return false;
       }
       Role.UpdateTaken();
       player.UpdateRole(Role);
       deadwood.PlayerRole(player, Role);
-      /*if(CheckRank(player, Role)){
-         Role.UpdateTaken();
-         player.UpdateRole(Role);
-      }
-      else{
-         System.out.println("you are not high enough rank for that role.");
-         Role = player.ClaimRole();
-      }*/
+      return true;
    }
 //check the player's rank for the role
    public static boolean CheckRank(Player player, part part){
@@ -281,7 +282,7 @@ public static void turns(){
       if(selection.equals("Exit")){
          return 0;
       }
-      while(rank > newRank){
+      while(rank >= newRank){
          JOptionPane.showMessageDialog(deadwood,"you cannot choose a rank lower than your current rank");
          Upgrade(player);
          return 1;
@@ -311,6 +312,7 @@ public static void turns(){
             else{
                player.AddMoney(-4);
                player.UpdateRank(2);
+               deadwood.UpgradePlayerIcon(player, 2);
             }
          }
          else{
@@ -322,6 +324,7 @@ public static void turns(){
             else{
                player.AddCredits(-5);
                player.UpdateRank(2);
+               deadwood.UpgradePlayerIcon(player, 2);
             }
          }
       }
@@ -335,6 +338,7 @@ public static void turns(){
             else{
                player.AddMoney(-10);
                player.UpdateRank(3);
+               deadwood.UpgradePlayerIcon(player, 3);
             }
          }
          else{
@@ -346,6 +350,7 @@ public static void turns(){
             else{
                player.AddCredits(-10);
                player.UpdateRank(3);
+               deadwood.UpgradePlayerIcon(player, 3);
             }
          }
       }
@@ -359,6 +364,7 @@ public static void turns(){
             else{
                player.AddMoney(-18);
                player.UpdateRank(4);
+               deadwood.UpgradePlayerIcon(player, 4);
             }
          }
          else{
@@ -370,6 +376,7 @@ public static void turns(){
             else{
                player.AddCredits(-15);
                player.UpdateRank(4);
+               deadwood.UpgradePlayerIcon(player, 4);
             }
          }
       }
@@ -383,6 +390,7 @@ public static void turns(){
             else{
                player.AddMoney(-28);
                player.UpdateRank(5);
+               deadwood.UpgradePlayerIcon(player, 5);
             }
          }
          else{
@@ -394,6 +402,7 @@ public static void turns(){
             else{
                player.AddCredits(-20);
                player.UpdateRank(5);
+               deadwood.UpgradePlayerIcon(player, 5);
             }
          }
       }
@@ -407,6 +416,7 @@ public static void turns(){
             else{
                player.AddMoney(-40);
                player.UpdateRank(6);
+               deadwood.UpgradePlayerIcon(player, 6);
             }
          }
          else{
@@ -418,6 +428,7 @@ public static void turns(){
             else{
                player.AddCredits(-25);
                player.UpdateRank(6);
+               deadwood.UpgradePlayerIcon(player, 6);
             }
          }
       }
@@ -439,7 +450,7 @@ public static void turns(){
    public static void BonusPayout(Player player, Player[] PlayerList){
       set currentSet = player.GivePosition();
       int diceNum = currentSet.returnScene().GiveBudget();
-      int[] rolls = new int[diceNum];
+      int[] rolls = new int[diceNum+1];
       Player[] RoleLoc = new Player[6]; 
       for(int k = 0; k < diceNum; k++){
          Dice DiceB = new Dice();
@@ -462,27 +473,42 @@ public static void turns(){
             RoleLoc[scroller].AddMoney(rolls[diceNum]);
             diceNum--;
          }
-         if(scroller == 0){
+         scroller--;
+         if(scroller == -1){
             scroller = 5;
          }
       }
    }
    //reset the players and repopulate the board, reduce days
    private static void ResetDay(Player[] PlayerList){
-      SetList = DefaultBoard.returnSetlist();
       DistrCards();
+      deadwood.ResetShots();
+      deadwood.ResetCards(SetList);
       for(int r = 0; r < TotalPlayers; r++){ 
          PlayerList[r].UpdateLoc(SetList[10]);
+         deadwood.MovePlayerIcon(PlayerList[r], SetList[10]);
       }
       DaysLeft --;
+      if(DaysLeft != 0){
+         JOptionPane.showMessageDialog(deadwood,"Its a new Day! Daysleft "+ DaysLeft);
+      }
    }
    //display the stats at the end of the game
    private static void EndGame(Player[] PlayerList){
-      System.out.println("The Game is over! Go away!");
-      for(int m = 0; m < TotalPlayers; m++){
-         PlayerList[m].GetInfo();
-         System.out.println("--------------------------");
+      JOptionPane.showMessageDialog(deadwood,"The Game is Over! The Winner is...");
+      int[] score = new int[TotalPlayers];
+      int HighScore = 0;
+      int Winner = -1;
+      for(int v = 0; v < TotalPlayers; v++){
+         score[v] = (PlayerList[v].GiveMoney() + PlayerList[v].GiveCredits() + (PlayerList[v].GiveRank() * 5)); 
+         if(score[v] > HighScore){
+            Winner = v;
+            HighScore = score[v];   
+         }
       }
+      JOptionPane.showMessageDialog(deadwood,"Player "+(Winner+1)+" with a score of "+HighScore);
+      JOptionPane.showMessageDialog(deadwood,"GoodBye!");
+      System.exit(0);
    }
 }
 
@@ -539,6 +565,9 @@ private JLabel playerIcon;
    public String GiveName(){
       return PlayerName;
    }
+   public int GiveNumber(){
+      return PlayerNum;
+   }
    public int GiveRank(){
       return rank;
    }
@@ -550,6 +579,9 @@ private JLabel playerIcon;
    }
    public void ResetPart(){
       playerpart = new part();
+   }
+   public void ResetTokens(){
+      tokens = 0;
    }
    public boolean GiveOnCard(){
       return playerpart.ReturnOnCard();
@@ -563,6 +595,12 @@ private JLabel playerIcon;
    public boolean GiveUpgraded(){
       return hasUpgraded;
    }
+   public int GiveMoney(){
+      return money;
+   }
+   public int GiveCredits(){
+      return credits;
+   }
    public void moved(){
       hasmoved = true;
    }
@@ -571,70 +609,6 @@ private JLabel playerIcon;
    }
    public void resetUpgraded(){
       hasUpgraded = false;
-   }
-   //method to run current player's turn
-   public String PlayerTurn(){
-        //open scanner 
-      Scanner read = new Scanner(System.in);
-      String input;
-      System.out.println("Player"+PlayerNum+"'s turn. Your options are:\n");
-      
-        //list available options
-      if(!hasmoved){
-         System.out.println(" move ");
-      }
-      
-      if(playerpart.ReturnName() != null){
-         System.out.println(" act (this will end your turn)");
-      }
-      
-      if(canUpgrade(hasUpgraded) == true){
-         System.out.println(" upgrade ");
-      }
-      
-      if(playerpart.ReturnName() != null){
-         System.out.println(" rehearse (this will end your turn)");
-      }
-      
-      if(canClaim(playerpart.ReturnName() == null) && playerpart.ReturnName() == null){
-      	System.out.println(" claim role (this will end your turn)");
-      }
-      System.out.println(" get info ");
-      System.out.println(" end turn ");
-      //take input
-      input = read.nextLine();
-      if(input.equals("move") && !hasmoved){
-		   input = "move";
-		   hasmoved = true;
-	   }
-	
-   	else if(input.equals("act") && playerpart.ReturnName() != null){
-   		input = "act";
-   	}
-   
-   	else if(input.equals("upgrade") && canUpgrade(hasUpgraded)){
-   		input = "upgrade";
-   	}
-   
-   	else if(input.equals("rehearse") && playerpart.ReturnName() != null){
-   		input = "rehearse";
-   	}
-   
-   	else if(input.equals("end turn")){
-   		input = "end turn";
-   	}
-   
-   	else if(input.equals("claim role") && canClaim(playerpart.ReturnName() == null)){
-   		input = "claim role";
-   	}
-      else if(input.equals("get info")){
-         GetInfo();
-      }
-   	else{
-   		System.out.println("invalid input");
-   		input = null;
-   	}
-      return input;
    }
    //check if player is allowed to upgrade rank
    private boolean canUpgrade(boolean hasUpgraded){
@@ -711,6 +685,9 @@ private JLabel playerIcon;
    public part ClaimRole(Player player){//gives game the role player wants
       Object[] playerOptions;
       part[] optionsB = currentposition.returnParts();
+      if(currentposition.returnScene() == null){
+         return null;
+      }
       part[] optionsS = currentposition.returnScene().GiveParts();
       String[] optionslist = new String[8];
       part[] optionsparts = new part[8];
@@ -759,15 +736,11 @@ private JLabel playerIcon;
    public void AddMoney(int payout){
       money += payout;
    }
-   public int GiveMoney(){
-      return money;
-   }
+
    public void AddCredits(int payout){
       credits += payout;
    }
-   public int GiveCredits(){
-      return credits;
-   }
+
 }
 //dice
 class Dice{
@@ -1102,71 +1075,78 @@ private int shotIndex;
 private Scenes SceneCard = new Scenes();
 private int shotsleft = -1;
 private JLabel Card;
+private JLabel[] shotIcon = new JLabel[3];
+private int iconIndex = 0;
 //update data
-public void UpdateName(String Name){
-   setName = Name;
+   public void UpdateName(String Name){
+      setName = Name;
    }
-public void UpdateImage(JLabel card){
-   Card = card;
-}
-public void AddNeighbor(String neighbor){
-   neighbors[neighborIndex] = neighbor;
-   neighborIndex ++; 
+   public void UpdateImage(JLabel card){
+      Card = card;
    }
-public void UpdateArea(int x, int y, int h, int w){
-   setArea[0] = x;
-   setArea[1] = y;
-   setArea[2] = h;
-   setArea[3] = w;
+   public void AddNeighbor(String neighbor){
+      neighbors[neighborIndex] = neighbor;
+      neighborIndex ++; 
    }
-public void AddPart(part NewPart){
-   partList[partIndex] = NewPart;
-   partIndex ++;
+   public void UpdateArea(int x, int y, int h, int w){
+      setArea[0] = x;
+      setArea[1] = y;
+      setArea[2] = h;
+      setArea[3] = w;
    }
-public void ShotsArea(int x, int y, int h, int w){
-   shots[shotIndex][0] = x;
-   shots[shotIndex][1] = y;
-   shots[shotIndex][2] = h;
-   shots[shotIndex][3] = w;
-   shotIndex ++;
-   if(shotsleft == -1){
-      shotsleft = 1;
+   public void AddPart(part NewPart){
+      partList[partIndex] = NewPart;
+      partIndex ++;
+      }
+   public void ShotsArea(int x, int y, int h, int w){
+      shots[shotIndex][0] = x;
+      shots[shotIndex][1] = y;
+      shots[shotIndex][2] = h;
+      shots[shotIndex][3] = w;
+      shotIndex ++;
+      if(shotsleft == -1){
+         shotsleft = 1;
+      }
+      else{
+         shotsleft ++;
+      }
    }
-   else{
-      shotsleft ++;
+   public void UpdateCard(Scenes card){
+      SceneCard = card;
    }
+   public void UpdateShotIcon(JLabel icon){
+      shotIcon[iconIndex] = icon;
+      iconIndex++;
    }
-public void UpdateCard(Scenes card){
-   SceneCard = card;
-}
-public void ShotDone(){
-   shotsleft --;
-}
-//return data
-public String returnName(){
-   return setName;
+   public void ShotDone(){
+      shotIcon[shotsleft-1].setVisible(false);
+      shotsleft --;
    }
-public int returnShots(){
-   return shotsleft;   
+   //return data
+   public String returnName(){
+      return setName;
    }
-public String[] returnNeighbors(){
-   return neighbors;
+   public int returnShots(){
+      return shotsleft;   
+      }
+   public String[] returnNeighbors(){
+      return neighbors;
    }
-public int[] returnArea(){
-   return setArea;
+   public int[] returnArea(){
+      return setArea;
    }
-public part[] returnParts(){
-   return partList;
+   public part[] returnParts(){
+      return partList;
    }
-public Scenes returnScene(){
-   return SceneCard;
+   public Scenes returnScene(){
+      return SceneCard;
    }
-public int[] returnShotArea(){
-   return shots[shotIndex-1];
+   public int[] returnShotArea(int index){
+      return shots[index];
    }
-public JLabel returnCard(){
-   return Card;   
-}
+   public JLabel returnCard(){
+      return Card;   
+   }
 }
 class GUI extends JFrame{
 JButton move = new JButton("Move");
@@ -1179,6 +1159,7 @@ JButton startTurn = new JButton("Start Turn");
 JLabel Board;
 JLabel[] Card = new JLabel[10];
 JLabel[] pIcons = new JLabel[8];
+JLabel[] Shots = new JLabel[22];
 JLabel Menu;
 JLayeredPane Format;
 JLabel info;
@@ -1197,14 +1178,14 @@ public void build(){
    Board = new JLabel();
    Board.setIcon(iconB);
    Board.setBounds(0,0,iconB.getIconWidth(),iconB.getIconHeight());
-   setSize(iconB.getIconWidth()+150,iconB.getIconHeight()+100);
+   setSize(iconB.getIconWidth()+200,iconB.getIconHeight()+100);
    Format.add(Board,new Integer(0));
    //adding player info (money, tokens, credits)
    info = new JLabel("PLAYER INFO");
    info.setBounds(iconB.getIconWidth(),0,100,15);
    Format.add(info, new Integer(2));
       playername = new JLabel("Player:  ");
-   playername.setBounds(iconB.getIconWidth(),20,100,15);
+   playername.setBounds(iconB.getIconWidth(),20,200,15);
    Format.add(playername, new Integer(2));
       money = new JLabel("Money:  ");
    money.setBounds(iconB.getIconWidth(),20,100,45);
@@ -1219,7 +1200,7 @@ public void build(){
    rank.setBounds(iconB.getIconWidth(),20,100,135);
    Format.add(rank, new Integer(2));
       role = new JLabel("Role:  ");
-   role.setBounds(iconB.getIconWidth(),20,100,165);
+   role.setBounds(iconB.getIconWidth(),20,200,165);
    Format.add(role, new Integer(2));
    //adding the menu label and buttons
    Menu = new JLabel("MENU");
@@ -1292,6 +1273,14 @@ public void build(){
       Format.add(pIcons[u], new Integer(3));
    }
   }
+     public void updateinfo(Player player){
+      playername.setText("Player: " + player.GiveName());
+      money.setText("Money: " + player.GiveMoney());
+      credits.setText("Credits: " + player.GiveCredits());
+      tokens.setText("Tokens: " + player.GiveTokens());
+      rank.setText("Rank: " + player.GiveRank());
+      role.setText("Role: " + player.GivePart().ReturnName());
+   }
   public void CardBuild(set[] location){
    //adding the first card
    for(int u = 0; u < 10; u++){
@@ -1306,11 +1295,73 @@ public void build(){
       Format.add(Card[u], new Integer(1));
    } 
   }
+  public void CreateShots(set[] Sets){
+  int shotSpot = 0;
+   for(int k = 0; k < 22; k++){
+      Shots[k] = new JLabel();
+      ImageIcon shot = new ImageIcon("shot.png");
+      Shots[k].setIcon(shot);
+   }
+   for(int L = 0; L < 10; L++){
+      int[][] shotLoc = new int[3][4]; 
+      shotLoc[0] = Sets[L].returnShotArea(0);
+      shotLoc[1] = Sets[L].returnShotArea(1);
+      shotLoc[2] = Sets[L].returnShotArea(2);
+      for(int c = 0; c < 3; c++){
+         if(shotLoc[c][0] != 0){
+            Shots[shotSpot].setBounds(shotLoc[c][0],shotLoc[c][1],shotLoc[c][2],shotLoc[c][3]); 
+            Sets[L].UpdateShotIcon(Shots[shotSpot]);
+            Format.add(Shots[shotSpot], new Integer(1));
+            Shots[shotSpot].setVisible(true);
+            shotSpot++;
+         }
+      }
+   }
+  }
+  public void ResetShots(){
+   for(int j = 0; j < 22; j++){
+      Shots[j].setVisible(true);
+   }
+  }
+  public void ResetCards(set[] Loc){
+   for(int w = 0; w < 10; w++){
+      Loc[w].returnCard().setIcon(new ImageIcon("CardBack.jpg"));
+      Loc[w].returnCard().setVisible(true);
+   }
+  }
   public void MovePlayerIcon(Player player, set NewLoc){
    int[] Icord = NewLoc.returnArea();
    JLabel mover = player.GiveIcon();
    mover.setBounds(Icord[0]+((player.PlayerNum-1) * 10), Icord[1]+115, mover.getIcon().getIconWidth(), mover.getIcon().getIconHeight());  
    }
+  public void UpgradePlayerIcon(Player player, int rank){
+   JLabel newRank = player.GiveIcon();
+   int check = player.GiveNumber()-1;
+   if(check == 0){
+      newRank.setIcon(new ImageIcon("b"+rank+".png"));
+   }
+   else if(check == 1){
+      newRank.setIcon(new ImageIcon("c"+rank+".png"));
+   }
+   else if(check == 2){
+      newRank.setIcon(new ImageIcon("g"+rank+".png"));
+   }
+   else if(check == 3){
+      newRank.setIcon(new ImageIcon("o"+rank+".png"));
+   }
+   else if(check == 4){
+      newRank.setIcon(new ImageIcon("r"+rank+".png"));
+   }
+   else if(check == 5){
+      newRank.setIcon(new ImageIcon("p"+rank+".png"));
+   }
+   else if(check == 6){
+      newRank.setIcon(new ImageIcon("v"+rank+".png"));
+   }
+   else{
+      newRank.setIcon(new ImageIcon("w"+rank+".png"));
+   }
+  }
 
   public void PlayerRole(Player player, part Role){
    int[] partCord = Role.ReturnCord();
@@ -1328,6 +1379,7 @@ class Actions implements ActionListener{
    public void checkactions(){
       Player player = Game.PlayerList[Game.tracker];
       Game.deadwood.claimRole.setEnabled(true);
+      Game.deadwood.upgrade.setEnabled(true);
       Game.deadwood.endTurn.setEnabled(true);
       if(player.GivePosition() != Game.SetList[11]){
          Game.deadwood.upgrade.setEnabled(false);
@@ -1357,21 +1409,28 @@ class Actions implements ActionListener{
          Game.deadwood.Act.setEnabled(true);
          Game.deadwood.upgrade.setEnabled(true);
          Game.deadwood.Rehearse.setEnabled(true);
+         Game.deadwood.updateinfo(Game.PlayerList[Game.tracker]);
          checkactions();
          Game.deadwood.startTurn.setEnabled(false);
       }
       else if("move".equals(e.getActionCommand())){
-         Game.Move(Game.PlayerList[Game.tracker]);
-         Game.PlayerList[Game.tracker].moved();
+         boolean exit = Game.Move(Game.PlayerList[Game.tracker]);
+         if(!exit){
+            Game.PlayerList[Game.tracker].moved();
+         }
          checkactions();
          System.out.print("moving...\n");
+         Game.deadwood.updateinfo(Game.PlayerList[Game.tracker]);
          Game.turns();
       }
       else if("claimRole".equals(e.getActionCommand())){
-         Game.ClaimingRole(Game.PlayerList[Game.tracker]);
+         boolean tookRole = Game.ClaimingRole(Game.PlayerList[Game.tracker]);
          checkactions();
          System.out.print("claiming role...\n");
-         Game.endturn = true;
+         if(tookRole){
+            Game.endturn = true;
+         }
+         Game.deadwood.updateinfo(Game.PlayerList[Game.tracker]);
          Game.turns();
       }
       else if("Act".equals(e.getActionCommand())){
@@ -1380,10 +1439,11 @@ class Actions implements ActionListener{
          //boolean SceneDone = Act(PlayerList[tracker], PlayerList[tracker].Act(PlayerList[tracker].GiveTokens()));
          if(SceneDone){
             set CheckerSet = Game.PlayerList[Game.tracker].GivePosition();
+            CheckerSet.returnCard().setVisible(false);
             Scenes CheckerCard = CheckerSet.returnScene();
             part[] CheckerScene = CheckerCard.GiveParts();
             for(int g = 0; g < 3; g++){
-               if(CheckerScene[g].ReturnTaken()){
+               if(CheckerScene[g] != null && CheckerScene[g].ReturnTaken()){
                   Bonus = true;
                }
             }
@@ -1394,13 +1454,17 @@ class Actions implements ActionListener{
                if(Game.PlayerList[c].GivePosition() == Game.PlayerList[Game.tracker].GivePosition()){
                   Game.PlayerList[c].GivePart().UpdateTaken();
                   Game.PlayerList[c].ResetPart();
+                  Game.PlayerList[c].ResetTokens();
+                  Game.deadwood.MovePlayerIcon(Game.PlayerList[c], Game.PlayerList[c].GivePosition());
                }
-            } 
+            }
+            CheckerSet.UpdateCard(null); 
          }
          Game.PlayerList[Game.tracker].resetMove();
          checkactions();
          System.out.print("Acting...\n");
          Game.endturn = true;
+         Game.deadwood.updateinfo(Game.PlayerList[Game.tracker]);
          Game.turns();
       }
       else if("Rehearse".equals(e.getActionCommand())){
@@ -1409,17 +1473,20 @@ class Actions implements ActionListener{
          checkactions();
          Game.endturn = true;
          System.out.print("Rehearsing...\n");
+         Game.deadwood.updateinfo(Game.PlayerList[Game.tracker]);
          Game.turns();
       }
       else if("upgrade".equals(e.getActionCommand())){
-         Game.Upgrade(Game.PlayerList[Game.tracker]);
+         int Upgraded = Game.Upgrade(Game.PlayerList[Game.tracker]);
          checkactions();
          System.out.print("upgrading...\n");
+         Game.deadwood.updateinfo(Game.PlayerList[Game.tracker]);
          Game.turns();
       }
       else if("endturn".equals(e.getActionCommand())){
          Game.endturn = true;
          checkactions();
+         Game.deadwood.updateinfo(Game.PlayerList[Game.tracker]);
          Game.turns();
          System.out.print("ending turn...\n");
       }
