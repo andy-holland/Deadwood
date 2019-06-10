@@ -2,7 +2,8 @@
 # Necessary files:
 # Board.xml
 # Cards.xml
-# Game.java
+# Deadwood.java
+# asset files
 # put all files in the same directory
-# compile Game.java
-# run Game.java
+# compile Deadwood.java
+# run Deadwood.java
