@@ -3,7 +3,8 @@
 # Board.xml
 # Cards.xml
 # Deadwood.java
-# asset files
+# card files
+# small asset files
 # put all files in the same directory
 # compile Deadwood.java
 # run Deadwood.java
